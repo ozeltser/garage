@@ -58,8 +58,10 @@ def logout():
 @login_required
 def run_script():
     try:
-        # Run the sample Python script
-        result = subprocess.run(['python', 'sample_script.py'], 
+        # Run the sample Python script using an absolute, whitelisted path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(script_dir, 'sample_script.py')
+        result = subprocess.run(['python', script_path],
                               capture_output=True, text=True, timeout=30)
         return jsonify({
             'success': True,
