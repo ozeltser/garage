@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Garage App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <span class="navbar-brand">Garage Dashboard</span>
+                <div class="navbar-nav ms-auto">
+                    <span class="navbar-text me-3">Welcome, {{ current_user.id }}!</span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h3 class="card-title mb-4">Server Control Panel</h3>
+                <p class="card-text mb-4">Click the button below to execute a Python script on the server.</p>
+                
+                <button id="runScriptBtn" class="btn btn-success btn-lg">
+                    <span id="btnText">Run Python Script</span>
+                    <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+                
+                <div id="outputContainer" class="mt-4 d-none">
+                    <h5>Script Output:</h5>
+                    <div id="scriptOutput" class="bg-light p-3 rounded border">
+                        <!-- Output will be displayed here -->
+                    </div>
+                </div>
+                
+                <div id="errorContainer" class="mt-4 d-none">
+                    <div id="scriptError" class="alert alert-danger">
+                        <!-- Errors will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

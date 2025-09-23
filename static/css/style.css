@@ -1,0 +1,125 @@
+/* Custom styles for the Garage App */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.btn {
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-size: 18px;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding: 10px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .btn-lg {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    h2, h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+    .btn-lg {
+        padding: 15px 35px;
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 769px) {
+    .card-body {
+        padding: 30px;
+    }
+}
+
+/* Loading animation */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Output styling */
+#scriptOutput {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+#errorContainer .alert {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    text-align: left;
+}
+
+/* Navigation improvements */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar-text {
+    color: #adb5bd !important;
+}
+
+/* Form improvements */
+.form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Loading state for button */
+.btn:disabled {
+    cursor: not-allowed;
+}
+
+/* Responsive text sizing */
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .navbar-text {
+        font-size: 0.9rem;
+    }
+}
