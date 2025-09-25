@@ -14,7 +14,7 @@ login_manager.login_view = 'login'
 
 # Simple user storage (in production, use a proper database)
 users = {
-    'admin': generate_password_hash('password')
+    'admin': generate_password_hash('mypassword')
 }
 
 class User(UserMixin):
@@ -60,7 +60,7 @@ def run_script():
     try:
         # Run the sample Python script using an absolute, whitelisted path
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        script_path = os.path.join(script_dir, 'sample_script.py')
+        script_path = os.path.join(script_dir, 'relay.py')
         result = subprocess.run(['python', script_path],
                               capture_output=True, text=True, timeout=30)
         return jsonify({
