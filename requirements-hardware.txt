@@ -1,0 +1,5 @@
+# Hardware-specific requirements (Raspberry Pi only)
+# Install with: pip install -r requirements-hardware.txt
+
+# Raspberry Pi Automation HAT library
+automationhat==3.4

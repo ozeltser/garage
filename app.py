@@ -70,27 +70,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/init_db')
-def init_db():
-    """Initialize the database and create default admin user"""
-    try:
-        # Create users table
-        db_manager.create_users_table()
-        
-        # Check if admin user exists, if not create it
-        admin_user = db_manager.get_user('admin')
-        if not admin_user:
-            admin_password_hash = generate_password_hash('mypassword')
-            db_manager.create_user('admin', admin_password_hash, 'admin@garage.com')
-            flash('Database initialized and admin user created successfully!')
-        else:
-            flash('Database already initialized!')
-        
-        return redirect(url_for('login'))
-    except Exception as e:
-        flash(f'Error initializing database: {str(e)}')
-        return redirect(url_for('login'))
-
 @app.route('/create_user', methods=['POST'])
 @login_required
 def create_user():
@@ -113,6 +92,16 @@ def create_user():
         flash('Username and password are required')
     
     return redirect(url_for('home'))
+
+@app.route('/db_status')
+@login_required
+def db_status():
+    """Get database connection pool status (admin only)"""
+    if current_user.username != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    pool_info = db_manager.get_pool_info()
+    return jsonify(pool_info)
 
 @app.route('/run_script', methods=['POST'])
 @login_required
@@ -139,5 +128,19 @@ def run_script():
             'error': str(e)
         })
 
+import atexit
+
+def cleanup():
+    """Cleanup function to close database connections"""
+    print("Cleaning up database connections...")
+    db_manager.close_pool()
+
+# Register cleanup function
+atexit.register(cleanup)
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    try:
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    except KeyboardInterrupt:
+        print("\nShutting down gracefully...")
+        cleanup()

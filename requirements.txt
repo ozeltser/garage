@@ -1,6 +1,13 @@
-Flask==3.0.0
-Flask-Login==0.6.3
-Werkzeug==3.0.1
-automationhat==3.4
-mysql-connector-python==8.2.0
-python-dotenv==1.0.0
+# Garage Web Application Requirements
+# 
+# For standard installation:
+#   pip install -r requirements.txt
+#
+# For Raspberry Pi with hardware control:
+#   pip install -r requirements.txt -r requirements-hardware.txt
+#
+# For development:
+#   pip install -r requirements-dev.txt
+
+# Include core application requirements
+-r requirements-core.txt

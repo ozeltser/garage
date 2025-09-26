@@ -1,0 +1,20 @@
+# Core Web Application Requirements
+# Install with: pip install -r requirements-core.txt
+
+# Web Framework
+Flask==3.0.0
+Flask-Login==0.6.3
+Werkzeug==3.0.1
+
+# Database
+mysql-connector-python==8.2.0
+
+# Configuration Management
+python-dotenv==1.0.0
+
+# Flask Dependencies (usually auto-installed)
+Jinja2>=3.1.6
+MarkupSafe>=3.0.2
+itsdangerous>=2.2.0
+click>=8.3.0
+blinker>=1.9.0

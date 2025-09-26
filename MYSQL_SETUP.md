@@ -33,22 +33,42 @@ DB_USER=your-username@your-server-name
 DB_PASSWORD=your-password
 DB_NAME=garage_db
 DB_PORT=3306
+DB_POOL_SIZE=5
 
 # Flask Configuration
 SECRET_KEY=your-secret-key-change-in-production
+
+# Initial Admin User Configuration
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your-secure-admin-password
+ADMIN_EMAIL=admin@garage.com
 ```
 
-**Important:** Replace the placeholder values with your actual Azure MySQL credentials:
+**Important:** Replace the placeholder values with your actual credentials:
 - `your-server-name`: Your Azure MySQL server name
 - `your-username`: Your MySQL username
 - `your-password`: Your MySQL password
+- `your-secure-admin-password`: A secure password for the admin user
+- `your-secret-key-change-in-production`: A secure secret key for Flask sessions
+- `DB_POOL_SIZE`: Number of connections in the pool (default: 5)
 
 ## Step 3: Install Dependencies
 
 Install the required Python packages:
 
+### Standard Installation (Web Application Only):
 ```bash
 pip install -r requirements.txt
+```
+
+### Raspberry Pi Installation (with Hardware Control):
+```bash
+pip install -r requirements.txt -r requirements-hardware.txt
+```
+
+### Development Installation:
+```bash
+pip install -r requirements-dev.txt
 ```
 
 ## Step 4: Initialize the Database
@@ -61,7 +81,7 @@ python init_db.py
 
 This will:
 - Create the `users` table
-- Create a default admin user (username: `admin`, password: `mypassword`)
+- Create a default admin user with credentials from your `.env` file
 
 ## Step 5: Start the Application
 
@@ -74,10 +94,8 @@ The application will be available at `http://localhost:5000`
 ## Step 6: First Login
 
 1. Navigate to `http://localhost:5000`
-2. Login with:
-   - Username: `admin`
-   - Password: `mypassword`
-3. **Important:** Change the admin password after first login
+2. Login with the admin credentials you configured in your `.env` file
+3. **Important:** Use a secure password and consider changing it after first login
 
 ## Database Schema
 
@@ -94,12 +112,22 @@ CREATE TABLE users (
 );
 ```
 
+## Performance Features
+
+### Connection Pooling
+The application uses MySQL connection pooling for improved performance:
+- **Pool Size:** Configurable via `DB_POOL_SIZE` environment variable (default: 5)
+- **Automatic Management:** Connections are automatically managed and reused
+- **Fallback:** Direct connections used if pool initialization fails
+- **Monitoring:** Admin users can view pool status via the web interface
+
 ## Security Considerations
 
 1. **Change Default Password:** Immediately change the default admin password
 2. **Environment Variables:** Never commit the `.env` file to version control
 3. **SSL Connection:** The application is configured to use SSL for database connections
 4. **Password Hashing:** Passwords are stored using Werkzeug's secure password hashing
+5. **Connection Pool Security:** Pool connections use the same SSL and authentication settings
 
 ## Troubleshooting
 
@@ -137,8 +165,8 @@ When logged in as admin, you can:
 - `GET /login` - Login page
 - `POST /login` - Process login
 - `GET /logout` - Logout
-- `GET /init_db` - Initialize database (for setup only)
 - `POST /create_user` - Create new user (admin only)
+- `GET /db_status` - Get database connection pool status (admin only)
 - `POST /run_script` - Execute Python script (authenticated users)
 
 ## Adding More Users

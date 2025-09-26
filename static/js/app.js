@@ -63,6 +63,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Database status functionality (admin only)
+    const refreshDbStatusBtn = document.getElementById('refreshDbStatus');
+    const dbStatusInfo = document.getElementById('dbStatusInfo');
+    
+    if (refreshDbStatusBtn) {
+        refreshDbStatusBtn.addEventListener('click', function() {
+            refreshDbStatusBtn.disabled = true;
+            refreshDbStatusBtn.textContent = 'Loading...';
+            
+            fetch('/db_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    dbStatusInfo.innerHTML = `<span class="text-danger">Error: ${data.error}</span>`;
+                } else {
+                    dbStatusInfo.innerHTML = `
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Pool Name:</strong> ${data.pool_name || 'N/A'}</div>
+                            <div class="col-sm-6"><strong>Pool Size:</strong> ${data.pool_size || 'N/A'}</div>
+                            <div class="col-sm-6"><strong>Connections in Use:</strong> ${data.connections_in_use || 'N/A'}</div>
+                            <div class="col-sm-6"><strong>Total Connections:</strong> ${data.total_connections || 'N/A'}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                dbStatusInfo.innerHTML = `<span class="text-danger">Network error: ${error.message}</span>`;
+            })
+            .finally(() => {
+                refreshDbStatusBtn.disabled = false;
+                refreshDbStatusBtn.textContent = 'Refresh DB Status';
+            });
+        });
+    }
+
     // Add some mobile-friendly enhancements
     if (window.innerWidth <= 576) {
         // Add touch feedback for mobile devices

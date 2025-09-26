@@ -1,0 +1,15 @@
+# Development and Testing Requirements
+# Install with: pip install -r requirements-dev.txt
+
+# Include core requirements
+-r requirements-core.txt
+
+# Development Tools
+pytest>=7.0.0
+pytest-flask>=1.2.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Testing Database
+pytest-mock>=3.10.0
