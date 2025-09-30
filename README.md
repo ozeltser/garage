@@ -41,18 +41,158 @@ A Python Flask web application that provides a secure login interface and allows
    http://localhost:5000
    ```
 
-### Default Credentials
+# Garage Web App
 
-- **Username**: `admin`
-- **Password**: `password`
+A Python Flask web application that provides secure MySQL-based authentication and allows authenticated users to execute Python scripts on the server. The application is designed to be responsive and work well on both mobile and desktop browsers.
+
+## Features
+
+- 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
+- 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
+- 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
+- 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
+- ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
+- 📊 **Output Display**: View script output and errors in real-time
+- 🔒 **Environment-based Configuration**: Secure configuration using environment variables
+- 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
+
+## Prerequisites
+
+- Python 3.7 or higher
+- pip (Python package installer)
+- MySQL 5.7+ or MariaDB 10.2+
+
+## Installation
+
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd garage
+```
+
+### 2. Install Python dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Set up MySQL Database
+
+#### Create Database and User
+Connect to your MySQL server and run:
+```sql
+-- Create database
+CREATE DATABASE garage_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Create user with limited privileges
+CREATE USER 'garage_user'@'localhost' IDENTIFIED BY 'your-secure-password';
+
+-- Grant necessary privileges
+GRANT SELECT, INSERT, UPDATE, DELETE ON garage_app.* TO 'garage_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+#### For SSL connections (recommended for production):
+```sql
+-- Create user with SSL requirement
+CREATE USER 'garage_user'@'%' IDENTIFIED BY 'your-secure-password' REQUIRE SSL;
+GRANT SELECT, INSERT, UPDATE, DELETE ON garage_app.* TO 'garage_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+### 4. Configure Environment Variables
+
+Copy the example environment file and customize it:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your database configuration:
+```bash
+# Flask configuration
+SECRET_KEY=your-unique-secret-key-generate-a-strong-one
+
+# MySQL Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=garage_app
+DB_USER=garage_user
+DB_PASSWORD=your-secure-database-password
+
+# For SSL connections (optional but recommended)
+DB_SSL_CA=/path/to/ca-cert.pem
+DB_SSL_CERT=/path/to/client-cert.pem
+DB_SSL_KEY=/path/to/client-key.pem
+
+# Initial admin user (used for first-time setup)
+DEFAULT_USERNAME=admin
+DEFAULT_PASSWORD=your-secure-admin-password
+```
+
+**Important Security Notes:**
+- Generate a strong, unique `SECRET_KEY` for production
+- Use strong passwords for both database and admin user
+- Never commit the `.env` file to version control
+- Consider using SSL connections for production deployments
+
+### 5. Initialize the Database
+
+Run the database initialization script to set up tables and create the initial admin user:
+```bash
+python init_db.py
+```
+
+This script will:
+- Create the necessary database tables
+- Set up the initial admin user with credentials from your `.env` file
+- Verify database connectivity
+
+### 6. Run the Application
+
+```bash
+python app.py
+```
+
+The application will start on `http://localhost:5000` (or the host/port specified in your `.env` file).
+
+## User Management
+
+### Initial Admin Login
+After running `init_db.py`, you can log in with:
+- **Username**: Value of `DEFAULT_USERNAME` from your `.env` file (default: `admin`)
+- **Password**: Value of `DEFAULT_PASSWORD` from your `.env` file
+
+### Adding New Users
+Currently, new users must be added directly to the database. You can use the database manager:
+
+```python
+from database import DatabaseManager
+from dotenv import load_dotenv
+
+load_dotenv()
+db_manager = DatabaseManager()
+
+# Create a new user
+db_manager.create_user('newuser', 'secure-password')
+```
+
+### Password Management
+To update a user's password:
+```python
+# Update password
+db_manager.update_password('username', 'new-secure-password')
+```
 
 ## Project Structure
 
 ```
 garage/
-├── app.py                 # Main Flask application
+├── app.py                 # Main Flask application with MySQL authentication
+├── database.py            # Database manager for secure MySQL operations
+├── init_db.py            # Database initialization script
 ├── requirements.txt       # Python dependencies
-├── sample_script.py       # Example Python script to execute
+├── relay.py              # Example Python script to execute
+├── .env.example          # Environment variables template
+├── .gitignore           # Git ignore file (excludes .env)
 ├── templates/
 │   ├── base.html         # Base template with common layout
 │   ├── login.html        # Login page template
@@ -66,61 +206,116 @@ garage/
 
 ## Configuration
 
-### Security
-- Change the `SECRET_KEY` in `app.py` for production use
-- Update the default credentials in the `users` dictionary
-- Consider using a proper database for user management in production
+### Security Features
+- ✅ **MySQL Database Authentication**: No more hardcoded passwords
+- ✅ **Environment Variable Configuration**: Secrets stored securely outside code
+- ✅ **Password Hashing**: Uses Werkzeug's secure password hashing
+- ✅ **Optional SSL/TLS**: Secure database connections
+- ✅ **Logging**: Security events and errors are logged
+- ✅ **Input Validation**: Database queries use parameterized statements
+
+### Environment Variables
+All sensitive configuration is managed through environment variables in `.env`:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SECRET_KEY` | Flask secret key for sessions | Yes |
+| `DB_HOST` | MySQL server hostname | Yes |
+| `DB_PORT` | MySQL server port | No (default: 3306) |
+| `DB_NAME` | Database name | Yes |
+| `DB_USER` | Database username | Yes |
+| `DB_PASSWORD` | Database password | Yes |
+| `DB_SSL_CA` | SSL CA certificate path | No |
+| `DB_SSL_CERT` | SSL client certificate path | No |
+| `DB_SSL_KEY` | SSL client key path | No |
+| `DEFAULT_USERNAME` | Initial admin username | No (default: admin) |
+| `DEFAULT_PASSWORD` | Initial admin password | No (default: admin) |
 
 ### Script Customization
-- Edit `sample_script.py` to customize what runs when the button is clicked
+- Edit `relay.py` to customize what runs when the button is clicked
 - The script output (stdout) and errors (stderr) are displayed in the web interface
 - Scripts have a 30-second timeout limit
-
-## Responsive Design
-
-The application uses Bootstrap 5 and custom CSS to provide:
-- **Mobile-first approach**: Optimized for smartphones and tablets
-- **Flexible layouts**: Adapts to different screen sizes
-- **Touch-friendly controls**: Large buttons and touch interactions
-- **Readable typography**: Proper font sizing for all devices
 
 ## Technology Stack
 
 - **Backend**: Flask (Python web framework)
+- **Database**: MySQL/MariaDB with PyMySQL driver
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
-- **Authentication**: Flask-Login
-- **Security**: Werkzeug password hashing
+- **Authentication**: Flask-Login with MySQL backend
+- **Security**: Werkzeug password hashing, SSL/TLS support
+- **Configuration**: python-dotenv for environment management
 
 ## API Endpoints
 
 - `GET /`: Home page (redirects to login if not authenticated)
 - `GET /login`: Login page
-- `POST /login`: Process login credentials
+- `POST /login`: Process login credentials against MySQL database
 - `GET /logout`: Logout and redirect to login
 - `POST /run_script`: Execute the Python script (requires authentication)
 
 ## Development
 
-### Running in Debug Mode
-The application runs in debug mode by default. For production:
+### Running in Development Mode
+Set `FLASK_DEBUG=True` in your `.env` file for development features:
+- Automatic reload on code changes
+- Detailed error pages
+- Debug logging
 
+For production, set `FLASK_DEBUG=False`.
+
+### Adding New Users
+Use the database manager to add users programmatically:
 ```python
-app.run(debug=False, host='0.0.0.0', port=5000)
+from database import DatabaseManager
+from dotenv import load_dotenv
+
+load_dotenv()
+db_manager = DatabaseManager()
+db_manager.create_user('newuser', 'secure-password')
 ```
 
-### Adding New Scripts
-1. Create your Python script in the project directory
-2. Update the `run_script()` function in `app.py` to execute your script
-3. Ensure proper error handling and timeout management
+### Database Management
+The `database.py` module provides secure methods for:
+- User creation and authentication
+- Password updates
+- User account management
+- Secure database connections
 
 ## Security Considerations
 
-- This is a development/demo application
-- In production, use proper HTTPS
-- Implement proper user management with a database
-- Add CSRF protection
-- Validate and sanitize all inputs
-- Use environment variables for sensitive configuration
+### Production Deployment Checklist
+- ✅ **Use HTTPS**: Deploy behind a reverse proxy with SSL/TLS
+- ✅ **Strong Passwords**: Generate secure passwords for all accounts
+- ✅ **SSL Database Connections**: Enable SSL/TLS for database connections
+- ✅ **Environment Variables**: Never commit `.env` files to version control
+- ✅ **Database Security**: Use dedicated database user with minimal privileges
+- ✅ **Network Security**: Restrict database access to application servers only
+- ✅ **Regular Updates**: Keep dependencies updated
+- ✅ **Monitoring**: Monitor logs for security events
+
+### Additional Security Measures
+Consider implementing for production:
+- CSRF protection
+- Rate limiting for login attempts
+- Two-factor authentication
+- Session timeout
+- Regular security audits
+- Database backups and encryption at rest
+
+## Troubleshooting
+
+### Database Connection Issues
+1. Verify MySQL server is running and accessible
+2. Check database credentials in `.env` file
+3. Ensure database and user exist with proper permissions
+4. Check network connectivity and firewall settings
+5. Review application logs for detailed error messages
+
+### SSL Connection Issues
+1. Verify SSL certificate paths are correct
+2. Ensure certificates have proper permissions
+3. Check MySQL server SSL configuration
+4. Test SSL connection with MySQL client
 
 ## License
 
