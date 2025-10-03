@@ -2,29 +2,43 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import subprocess
 import os
-from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+from dotenv import load_dotenv
+from database import DatabaseManager
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize database manager
+try:
+    db_manager = DatabaseManager()
+except Exception as e:
+    logger.error(f"Failed to initialize database: {str(e)}")
+    raise
 
 # Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Simple user storage (in production, use a proper database)
-users = {
-    'admin': generate_password_hash('mypassword')
-}
-
 class User(UserMixin):
-    def __init__(self, username):
+    def __init__(self, username, user_id=None):
         self.id = username
+        self.user_id = user_id
 
 @login_manager.user_loader
 def load_user(user_id):
-    if user_id in users:
-        return User(user_id)
+    """Load user from database by username."""
+    user_data = db_manager.get_user_by_username(user_id)
+    if user_data:
+        return User(user_data['username'], user_data['id'])
     return None
 
 @app.route('/')
@@ -39,12 +53,20 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        if username in users and check_password_hash(users[username], password):
-            user = User(username)
-            login_user(user)
-            return redirect(url_for('home'))
-        else:
+        try:
+            if db_manager.verify_password(username, password):
+                user_data = db_manager.get_user_by_username(username)
+                if user_data:
+                    user = User(user_data['username'], user_data['id'])
+                    login_user(user)
+                    logger.info(f"User '{username}' logged in successfully")
+                    return redirect(url_for('home'))
+            
+            logger.warning(f"Failed login attempt for username: {username}")
             flash('Invalid username or password')
+        except Exception as e:
+            logger.error(f"Login error for user {username}: {str(e)}")
+            flash('An error occurred during login. Please try again.')
     
     return render_template('login.html')
 
@@ -80,4 +102,9 @@ def run_script():
         })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    host = os.getenv('APP_HOST', '0.0.0.0')
+    port = int(os.getenv('APP_PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    
+    logger.info(f"Starting Garage Web App on {host}:{port} (debug={debug})")
+    app.run(debug=debug, host=host, port=port)
