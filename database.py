@@ -75,6 +75,10 @@ class DatabaseManager:
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             username VARCHAR(255) UNIQUE NOT NULL,
                             password_hash VARCHAR(255) NOT NULL,
+                            first_name VARCHAR(255),
+                            last_name VARCHAR(255),
+                            email VARCHAR(255),
+                            phone VARCHAR(50),
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             is_active BOOLEAN DEFAULT TRUE
@@ -107,7 +111,7 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, password_hash, is_active FROM users WHERE username = %s AND is_active = TRUE",
+                        "SELECT id, username, password_hash, first_name, last_name, email, phone, is_active FROM users WHERE username = %s AND is_active = TRUE",
                         (username,)
                     )
                     return cursor.fetchone()
@@ -160,6 +164,32 @@ class DatabaseManager:
                         return False
         except Exception as e:
             logger.error(f"Failed to update password for user {username}: {str(e)}")
+            return False
+    
+    def update_user_profile(self, username: str, first_name: str = None, last_name: str = None, 
+                           email: str = None, phone: str = None) -> bool:
+        """Update user profile information."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """UPDATE users SET 
+                           first_name = %s, 
+                           last_name = %s, 
+                           email = %s, 
+                           phone = %s, 
+                           updated_at = CURRENT_TIMESTAMP 
+                           WHERE username = %s AND is_active = TRUE""",
+                        (first_name, last_name, email, phone, username)
+                    )
+                    if cursor.rowcount > 0:
+                        logger.info(f"Profile updated for user '{username}'")
+                        return True
+                    else:
+                        logger.warning(f"User '{username}' not found or inactive")
+                        return False
+        except Exception as e:
+            logger.error(f"Failed to update profile for user {username}: {str(e)}")
             return False
     
     def deactivate_user(self, username: str) -> bool:
