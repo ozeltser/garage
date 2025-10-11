@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const runScriptBtn = document.getElementById('runScriptBtn');
     const btnText = document.getElementById('btnText');
+    const initialBtnText = btnText.textContent;
     const btnSpinner = document.getElementById('btnSpinner');
     const outputContainer = document.getElementById('outputContainer');
     const scriptOutput = document.getElementById('scriptOutput');
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 // Reset button state
-                btnText.textContent = 'Run Python Script';
+                btnText.textContent = initialBtnText;
                 btnSpinner.classList.add('d-none');
                 runScriptBtn.disabled = false;
 
@@ -121,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 // Reset button state
-                btnText.textContent = 'Run Python Script';
+                btnText.textContent = initialBtnText;
                 btnSpinner.classList.add('d-none');
                 runScriptBtn.disabled = false;
 
