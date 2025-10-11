@@ -1,6 +1,75 @@
 // JavaScript for the Garage App
 
+// Theme management
+function initTheme() {
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Default to 'auto' if no preference is stored
+    const currentTheme = storedTheme || 'auto';
+    
+    // Apply theme based on current setting
+    if (currentTheme === 'auto') {
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+    }
+    
+    // Update button icon
+    updateThemeIcon(currentTheme);
+    
+    // Listen for OS theme changes when in auto mode
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (localStorage.getItem('theme') === 'auto' || !localStorage.getItem('theme')) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+function updateThemeIcon(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    // Icons for each mode: auto (circle-half), light (sun), dark (moon)
+    const icons = {
+        'auto': '◐',  // Half circle for auto mode
+        'light': '☀',  // Sun for light mode
+        'dark': '☾'    // Moon for dark mode
+    };
+    
+    themeToggle.innerHTML = icons[theme] || icons['auto'];
+    themeToggle.setAttribute('aria-label', `Current theme: ${theme}. Click to cycle.`);
+}
+
+function toggleTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'auto';
+    const themes = ['auto', 'light', 'dark'];
+    const currentIndex = themes.indexOf(currentTheme);
+    const nextTheme = themes[(currentIndex + 1) % themes.length];
+    
+    localStorage.setItem('theme', nextTheme);
+    
+    // Apply the new theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (nextTheme === 'auto') {
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', nextTheme);
+    }
+    
+    updateThemeIcon(nextTheme);
+}
+
+// Initialize theme before DOMContentLoaded to prevent flash
+initTheme();
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup theme toggle button
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
     const runScriptBtn = document.getElementById('runScriptBtn');
     const btnText = document.getElementById('btnText');
     const btnSpinner = document.getElementById('btnSpinner');
