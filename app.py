@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import subprocess
 import os
 import logging
+import atexit
 from dotenv import load_dotenv
 from database import DatabaseManager
 
@@ -22,6 +23,13 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize database: {str(e)}")
     raise
+
+# Register cleanup handler for connection pool
+@atexit.register
+def cleanup():
+    """Clean up database connection pool on application shutdown."""
+    logger.info("Application shutting down, closing database connection pool...")
+    db_manager.close_pool()
 
 # Flask-Login setup
 login_manager = LoginManager()
