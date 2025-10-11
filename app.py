@@ -76,6 +76,57 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        try:
+            # Get form data
+            first_name = request.form.get('first_name', '').strip()
+            last_name = request.form.get('last_name', '').strip()
+            email = request.form.get('email', '').strip()
+            phone = request.form.get('phone', '').strip()
+            
+            # Update profile
+            if db_manager.update_user_profile(
+                current_user.id, 
+                first_name if first_name else None,
+                last_name if last_name else None,
+                email if email else None,
+                phone if phone else None
+            ):
+                flash('Profile updated successfully', 'success')
+                
+                # Handle password change if provided
+                current_password = request.form.get('current_password', '').strip()
+                new_password = request.form.get('new_password', '').strip()
+                confirm_password = request.form.get('confirm_password', '').strip()
+                
+                if new_password:
+                    if not current_password:
+                        flash('Current password is required to change password', 'error')
+                    elif new_password != confirm_password:
+                        flash('New passwords do not match', 'error')
+                    elif not db_manager.verify_password(current_user.id, current_password):
+                        flash('Current password is incorrect', 'error')
+                    else:
+                        if db_manager.update_password(current_user.id, new_password):
+                            flash('Password updated successfully', 'success')
+                        else:
+                            flash('Failed to update password', 'error')
+            else:
+                flash('Failed to update profile', 'error')
+                
+        except Exception as e:
+            logger.error(f"Profile update error for user {current_user.id}: {str(e)}")
+            flash('An error occurred while updating profile. Please try again.', 'error')
+        
+        return redirect(url_for('profile'))
+    
+    # GET request - display profile form
+    user_data = db_manager.get_user_by_username(current_user.id)
+    return render_template('profile.html', user=user_data)
+
 @app.route('/run_script', methods=['POST'])
 @login_required
 def run_script():

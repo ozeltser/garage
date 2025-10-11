@@ -146,6 +146,8 @@ This script will:
 - Set up the initial admin user with credentials from your `.env` file
 - Verify database connectivity
 
+**For existing installations**: If you're upgrading from a previous version, see the [Database Migration Guide](MIGRATION.md) for instructions on migrating your existing database schema.
+
 ### 6. Run the Application
 
 ```bash
@@ -160,6 +162,15 @@ The application will start on `http://localhost:5000` (or the host/port specifie
 After running `init_db.py`, you can log in with:
 - **Username**: Value of `DEFAULT_USERNAME` from your `.env` file (default: `admin`)
 - **Password**: Value of `DEFAULT_PASSWORD` from your `.env` file
+
+### User Profile Management
+Users can manage their profile information by clicking the "Profile" link in the dashboard:
+- Update first name and last name
+- Update email address
+- Update phone number
+- Change password (requires current password verification)
+
+All profile fields are optional and can be updated independently.
 
 ### Adding New Users
 Currently, new users must be added directly to the database. You can use the database manager:
@@ -189,14 +200,17 @@ garage/
 ├── app.py                 # Main Flask application with MySQL authentication
 ├── database.py            # Database manager for secure MySQL operations
 ├── init_db.py            # Database initialization script
+├── migrate_db.py         # Database migration script for schema updates
 ├── requirements.txt       # Python dependencies
 ├── relay.py              # Example Python script to execute
 ├── .env.example          # Environment variables template
 ├── .gitignore           # Git ignore file (excludes .env)
+├── MIGRATION.md          # Database migration guide
 ├── templates/
 │   ├── base.html         # Base template with common layout
 │   ├── login.html        # Login page template
-│   └── dashboard.html    # Dashboard template
+│   ├── dashboard.html    # Dashboard template
+│   └── profile.html      # User profile page template
 └── static/
     ├── css/
     │   └── style.css     # Custom styles for responsive design
@@ -251,6 +265,8 @@ All sensitive configuration is managed through environment variables in `.env`:
 - `GET /login`: Login page
 - `POST /login`: Process login credentials against MySQL database
 - `GET /logout`: Logout and redirect to login
+- `GET /profile`: User profile page (requires authentication)
+- `POST /profile`: Update user profile and password (requires authentication)
 - `POST /run_script`: Execute the Python script (requires authentication)
 
 ## Development
