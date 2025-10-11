@@ -12,6 +12,14 @@
     --output-border: #dee2e6;
     --form-border: #e9ecef;
     --form-focus-border: #0d6efd;
+    /* Garage status indicator colors */
+    --status-box-bg: #ffffff;
+    --status-box-border: #dee2e6;
+    --status-box-shadow: rgba(0, 0, 0, 0.1);
+    --status-label-color: #6c757d;
+    --status-closed-border: #28a745;
+    --status-closed-bg: #d4edda;
+    --status-closed-text: #28a745;
 }
 
 [data-theme="dark"] {
@@ -26,6 +34,14 @@
     --output-border: #404040;
     --form-border: #404040;
     --form-focus-border: #0d6efd;
+    /* Garage status indicator colors for dark mode */
+    --status-box-bg: #2d2d2d;
+    --status-box-border: #404040;
+    --status-box-shadow: rgba(0, 0, 0, 0.3);
+    --status-label-color: #adb5bd;
+    --status-closed-border: #28a745;
+    --status-closed-bg: rgba(40, 167, 69, 0.2);
+    --status-closed-text: #4ade80;
 }
 
 body {
@@ -198,4 +214,68 @@ body {
 /* Navbar dark mode improvements */
 [data-theme="dark"] .navbar-dark {
     background-color: var(--navbar-bg) !important;
+}
+
+/* Garage Door Status Indicator */
+.garage-status-box {
+    background-color: var(--status-box-bg);
+    border: 2px solid var(--status-box-border);
+    border-radius: 15px;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 2px 4px var(--status-box-shadow);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--status-label-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: var(--output-bg);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.status-indicator.closed {
+    border: 2px solid var(--status-closed-border);
+    background-color: var(--status-closed-bg);
+}
+
+.status-icon {
+    font-size: 2.5rem;
+}
+
+.status-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--status-closed-text);
+    transition: color 0.3s ease;
+}
+
+/* Responsive status box */
+@media (max-width: 576px) {
+    .garage-status-box {
+        padding: 15px;
+    }
+    
+    .status-icon {
+        font-size: 2rem;
+    }
+    
+    .status-text {
+        font-size: 1.2rem;
+    }
 }
