@@ -55,6 +55,7 @@ A Python Flask web application that provides secure MySQL-based authentication a
 - 📊 **Output Display**: View script output and errors in real-time
 - 🔒 **Environment-based Configuration**: Secure configuration using environment variables
 - 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
+- 🔄 **Connection Pooling**: Efficient database connection pooling for improved performance and resource management
 
 ## Prerequisites
 
@@ -122,6 +123,16 @@ DB_PASSWORD=your-secure-database-password
 DB_SSL_CA=/path/to/ca-cert.pem
 DB_SSL_CERT=/path/to/client-cert.pem
 DB_SSL_KEY=/path/to/client-key.pem
+
+# Database Connection Pool Settings (optional)
+# Minimum number of idle connections to keep in pool
+DB_POOL_MIN_SIZE=1
+# Maximum number of connections in pool
+DB_POOL_MAX_SIZE=10
+# Maximum idle time for connections in seconds (default: 300 = 5 minutes)
+DB_POOL_MAX_IDLE=300
+# Maximum number of times a connection can be reused (0 = unlimited)
+DB_POOL_MAX_USAGE=0
 
 # Initial admin user (used for first-time setup)
 DEFAULT_USERNAME=admin
@@ -242,6 +253,10 @@ All sensitive configuration is managed through environment variables in `.env`:
 | `DB_SSL_CA` | SSL CA certificate path | No |
 | `DB_SSL_CERT` | SSL client certificate path | No |
 | `DB_SSL_KEY` | SSL client key path | No |
+| `DB_POOL_MIN_SIZE` | Minimum connections in pool | No (default: 1) |
+| `DB_POOL_MAX_SIZE` | Maximum connections in pool | No (default: 10) |
+| `DB_POOL_MAX_IDLE` | Max idle time for connections (seconds) | No (default: 300) |
+| `DB_POOL_MAX_USAGE` | Max times connection can be reused | No (default: 0=unlimited) |
 | `DEFAULT_USERNAME` | Initial admin username | No (default: admin) |
 | `DEFAULT_PASSWORD` | Initial admin password | No (default: admin) |
 
@@ -253,7 +268,7 @@ All sensitive configuration is managed through environment variables in `.env`:
 ## Technology Stack
 
 - **Backend**: Flask (Python web framework)
-- **Database**: MySQL/MariaDB with PyMySQL driver
+- **Database**: MySQL/MariaDB with PyMySQL driver and DBUtils connection pooling
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
 - **Authentication**: Flask-Login with MySQL backend
 - **Security**: Werkzeug password hashing, SSL/TLS support

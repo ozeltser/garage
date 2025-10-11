@@ -6,6 +6,7 @@ import pymysql
 import logging
 from typing import Optional, Dict, Any
 from werkzeug.security import generate_password_hash, check_password_hash
+from dbutils.pooled_db import PooledDB
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,7 @@ class DatabaseManager:
     def __init__(self):
         """Initialize database manager with secure connection parameters."""
         self.connection_params = self._get_connection_params()
+        self._init_connection_pool()
         self._ensure_database_setup()
     
     def _get_connection_params(self) -> Dict[str, Any]:
@@ -54,15 +56,49 @@ class DatabaseManager:
         
         return params
     
-    def get_connection(self):
-        """Get a secure database connection."""
+    def _init_connection_pool(self):
+        """Initialize the database connection pool."""
         try:
-            connection = pymysql.connect(**self.connection_params)
-            logger.info("Database connection established successfully")
+            # Get pool configuration from environment variables with sensible defaults
+            pool_min_connections = int(os.getenv('DB_POOL_MIN_SIZE', 1))
+            pool_max_connections = int(os.getenv('DB_POOL_MAX_SIZE', 10))
+            pool_max_idle = int(os.getenv('DB_POOL_MAX_IDLE', 300))  # 5 minutes
+            pool_max_usage = int(os.getenv('DB_POOL_MAX_USAGE', 0))  # 0 = unlimited
+            
+            self.pool = PooledDB(
+                creator=pymysql,
+                mincached=pool_min_connections,
+                maxcached=pool_max_connections,
+                maxconnections=pool_max_connections,
+                blocking=True,
+                maxusage=pool_max_usage,
+                setsession=[],
+                ping=1,  # Check connection validity: 0=never, 1=default, 2=when checked out, 4=when checked in, 7=always
+                **self.connection_params
+            )
+            logger.info(f"Database connection pool initialized (min={pool_min_connections}, max={pool_max_connections})")
+        except Exception as e:
+            logger.error(f"Failed to initialize connection pool: {str(e)}")
+            raise
+    
+    def get_connection(self):
+        """Get a database connection from the pool."""
+        try:
+            connection = self.pool.connection()
+            logger.debug("Database connection acquired from pool")
             return connection
         except Exception as e:
-            logger.error(f"Failed to connect to database: {str(e)}")
+            logger.error(f"Failed to get connection from pool: {str(e)}")
             raise
+    
+    def close_pool(self):
+        """Close all connections in the pool. Call this when shutting down the application."""
+        try:
+            if hasattr(self, 'pool'):
+                self.pool.close()
+                logger.info("Database connection pool closed")
+        except Exception as e:
+            logger.error(f"Error closing connection pool: {str(e)}")
     
     def _ensure_database_setup(self):
         """Ensure the users table exists and create initial admin user if needed."""
