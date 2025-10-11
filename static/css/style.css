@@ -118,3 +118,63 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* Garage Door Status Indicator */
+.garage-status-box {
+    background-color: #fff;
+    border: 2px solid #dee2e6;
+    border-radius: 15px;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+}
+
+.status-indicator.closed {
+    border: 2px solid #28a745;
+    background-color: #d4edda;
+}
+
+.status-icon {
+    font-size: 2.5rem;
+}
+
+.status-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+/* Responsive status box */
+@media (max-width: 576px) {
+    .garage-status-box {
+        padding: 15px;
+    }
+    
+    .status-icon {
+        font-size: 2rem;
+    }
+    
+    .status-text {
+        font-size: 1.2rem;
+    }
+}
