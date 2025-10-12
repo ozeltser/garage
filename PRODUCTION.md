@@ -161,7 +161,7 @@ sudo usermod -a -G gpio,i2c,spi garage  # Add to hardware access groups
 
 ```bash
 # Switch to the garage user
-sudo su - garage
+sudo su - garage -s /bin/bash
 
 # Clone the repository
 cd /opt/garage
