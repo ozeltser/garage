@@ -13,4 +13,4 @@ if automationhat.is_automation_hat():
     except Exception as e:
         print(f'Exception happened: {e}', file=sys.stderr)
 else:
-    print("Automation HAT not found.")
+    print('Automation HAT not found.', file=sys.stderr)
