@@ -63,11 +63,64 @@ function toggleTheme() {
 // Initialize theme before DOMContentLoaded to prevent flash
 initTheme();
 
+// Function to update door status display
+function updateDoorStatus() {
+    fetch('/door_status', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const statusIndicator = document.querySelector('.status-indicator');
+            const statusIcon = document.querySelector('.status-icon');
+            const statusText = document.querySelector('.status-text');
+            
+            if (statusIndicator && statusIcon && statusText) {
+                // Remove existing status classes
+                statusIndicator.classList.remove('closed', 'open');
+                
+                // Update based on door status
+                if (data.status === 'closed') {
+                    statusIndicator.classList.add('closed');
+                    statusIcon.textContent = '🏠';
+                    statusText.textContent = 'CLOSED';
+                } else if (data.status === 'open') {
+                    statusIndicator.classList.add('open');
+                    statusIcon.textContent = '🚪';
+                    statusText.textContent = 'OPEN';
+                } else {
+                    // Unknown status
+                    statusIndicator.classList.add('closed');
+                    statusIcon.textContent = '❓';
+                    statusText.textContent = 'UNKNOWN';
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching door status:', error);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Setup theme toggle button
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // Update door status on page load
+    updateDoorStatus();
+    
+    // Add click handler to garage status box for manual refresh
+    const garageStatus = document.getElementById('garageStatus');
+    if (garageStatus) {
+        garageStatus.addEventListener('click', function() {
+            updateDoorStatus();
+        });
     }
     
     const runScriptBtn = document.getElementById('runScriptBtn');
@@ -108,6 +161,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Show output
                     scriptOutput.textContent = data.output || 'Script executed successfully (no output)';
                     outputContainer.classList.remove('d-none');
+                    
+                    // Update door status after running the script
+                    setTimeout(updateDoorStatus, 1000);
                     
                     // Also show errors if any (non-fatal)
                     if (data.error && data.error.trim()) {
