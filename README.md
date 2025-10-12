@@ -1,24 +1,37 @@
 # Garage Web App
 
-A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. The application is designed to be responsive and work well on both mobile and desktop browsers.
+A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. Perfect for controlling a garage door via Raspberry Pi with Automation HAT. The application is designed to be responsive and work well on both mobile and desktop browsers.
+
+## 📚 Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
+- **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
+- **[SECURITY.md](SECURITY.md)** - Security implementation details
+- **[MIGRATION.md](MIGRATION.md)** - Database migration guide
+- **[network-examples/](network-examples/)** - Network configuration examples
 
 ## Features
 
-- 🔐 **Secure Authentication**: User login system with session management
+- 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
 - 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
 - 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
 - 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
 - ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
 - 📊 **Output Display**: View script output and errors in real-time
+- 🔒 **Environment-based Configuration**: Secure configuration using environment variables
+- 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
+- 🤖 **Automation HAT Support**: Control relays and read sensors on Raspberry Pi
 
-## Quick Start
+## Quick Start (Development)
 
 ### Prerequisites
 
 - Python 3.7 or higher
 - pip (Python package installer)
+- MySQL 5.7+ or MariaDB 10.2+
 
-### Installation
+### Development Installation
 
 1. Clone this repository:
    ```bash
@@ -31,30 +44,22 @@ A Python Flask web application that provides a secure login interface and allows
    pip install -r requirements.txt
    ```
 
-3. Run the application:
+3. Set up database and configure `.env` (see Installation section below)
+
+4. Initialize database:
+   ```bash
+   python init_db.py
+   ```
+
+5. Run the application:
    ```bash
    python app.py
    ```
 
-4. Open your browser and navigate to:
+6. Open your browser and navigate to:
    ```
    http://localhost:5000
    ```
-
-# Garage Web App
-
-A Python Flask web application that provides secure MySQL-based authentication and allows authenticated users to execute Python scripts on the server. The application is designed to be responsive and work well on both mobile and desktop browsers.
-
-## Features
-
-- 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
-- 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
-- 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
-- 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
-- ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
-- 📊 **Output Display**: View script output and errors in real-time
-- 🔒 **Environment-based Configuration**: Secure configuration using environment variables
-- 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
 
 ## Prerequisites
 
