@@ -144,6 +144,14 @@ ENV/
 env.bak/
 venv.bak/
 
+# SSL/TLS certificates and keys (use separate secure storage)
+*.pem
+*.crt
+*.key
+*.cert
+*.p12
+*.pfx
+
 # Spyder project settings
 .spyderproject
 .spyproject

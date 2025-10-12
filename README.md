@@ -124,6 +124,9 @@ DB_USER=garage_user
 DB_PASSWORD=your-secure-database-password
 
 # For SSL connections (optional but recommended)
+# Download the appropriate CA certificate from your database provider
+# For MySQL on Azure, download from: https://learn.microsoft.com/en-us/azure/mysql/
+# For AWS RDS, download from: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
 DB_SSL_CA=/path/to/ca-cert.pem
 DB_SSL_CERT=/path/to/client-cert.pem
 DB_SSL_KEY=/path/to/client-key.pem
@@ -134,10 +137,11 @@ DEFAULT_PASSWORD=your-secure-admin-password
 ```
 
 **Important Security Notes:**
-- Generate a strong, unique `SECRET_KEY` for production
-- Use strong passwords for both database and admin user
+- Generate a strong, unique `SECRET_KEY` for production using: `python3 -c 'import secrets; print(secrets.token_hex(32))'`
+- Use strong, unique passwords for both database and admin user
 - Never commit the `.env` file to version control
 - Consider using SSL connections for production deployments
+- Change the default admin username to something unique (not 'admin')
 
 ### 5. Initialize the Database
 
