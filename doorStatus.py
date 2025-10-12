@@ -11,9 +11,6 @@ if automationhat.is_automation_hat():
         else:
             print("Door Opened")
     except Exception as e:
-        print("Exception happened:")
-        print(str(e))
-    finally:
-        pass
+        print(f'Exception happened: {e}', file=sys.stderr)
 else:
     print("Automation HAT not found.")
