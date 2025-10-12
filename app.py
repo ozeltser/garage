@@ -164,6 +164,8 @@ def door_status():
         
         # Parse the output to determine door status
         output = result.stdout.strip()
+        error_output = result.stderr.strip()
+        
         if 'Door Closed' in output:
             status = 'closed'
         elif 'Door Opened' in output:
@@ -175,7 +177,8 @@ def door_status():
         return jsonify({
             'success': True,
             'status': status,
-            'raw_output': output
+            'raw_output': output,
+            'error': error_output if error_output else None
         })
     except subprocess.TimeoutExpired:
         return jsonify({
