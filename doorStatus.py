@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time
+import sys
 import automationhat
 
 # First, check if the Automation HAT is connected to the Raspberry Pi.
