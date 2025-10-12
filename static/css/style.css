@@ -237,12 +237,11 @@ body {
 }
 
 .garage-status-box:hover {
-    box-shadow: 0 4px 8px var(--status-box-shadow);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 12px -2px var(--status-box-shadow);
 }
 
 .garage-status-box:active {
-    transform: translateY(0);
+    box-shadow: 0 2px 4px var(--status-box-shadow);
 }
 
 .status-label {
