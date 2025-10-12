@@ -20,6 +20,9 @@
     --status-closed-border: #28a745;
     --status-closed-bg: #d4edda;
     --status-closed-text: #28a745;
+    --status-open-border: #dc3545;
+    --status-open-bg: #f8d7da;
+    --status-open-text: #dc3545;
 }
 
 [data-theme="dark"] {
@@ -42,6 +45,9 @@
     --status-closed-border: #28a745;
     --status-closed-bg: rgba(40, 167, 69, 0.2);
     --status-closed-text: #4ade80;
+    --status-open-border: #dc3545;
+    --status-open-bg: rgba(220, 53, 69, 0.2);
+    --status-open-text: #ff6b6b;
 }
 
 body {
@@ -254,6 +260,11 @@ body {
     background-color: var(--status-closed-bg);
 }
 
+.status-indicator.open {
+    border: 2px solid var(--status-open-border);
+    background-color: var(--status-open-bg);
+}
+
 .status-icon {
     font-size: 2.5rem;
 }
@@ -261,8 +272,15 @@ body {
 .status-text {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--status-closed-text);
     transition: color 0.3s ease;
+}
+
+.status-indicator.closed .status-text {
+    color: var(--status-closed-text);
+}
+
+.status-indicator.open .status-text {
+    color: var(--status-open-text);
 }
 
 /* Responsive status box */
