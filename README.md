@@ -2,6 +2,8 @@
 
 A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. Perfect for controlling a garage door via Raspberry Pi with Automation HAT. The application is designed to be responsive and work well on both mobile and desktop browsers.
 
+The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry Pi](https://www.adafruit.com/product/3289?srsltid=AfmBOorXWBYoXvtCgz0uonOQeWMe-8TcBYCF4s3OaC758LlvVMGKlwBfXfg)
+
 ## 📚 Documentation
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
