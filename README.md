@@ -1,49 +1,17 @@
 # Garage Web App
 
-A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. The application is designed to be responsive and work well on both mobile and desktop browsers.
+A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. Perfect for controlling a garage door via Raspberry Pi with Automation HAT. The application is designed to be responsive and work well on both mobile and desktop browsers.
 
-## Features
+The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry Pi](https://www.adafruit.com/product/3289?srsltid=AfmBOorXWBYoXvtCgz0uonOQeWMe-8TcBYCF4s3OaC758LlvVMGKlwBfXfg)
 
-- 🔐 **Secure Authentication**: User login system with session management
-- 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
-- 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
-- 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
-- ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
-- 📊 **Output Display**: View script output and errors in real-time
+## 📚 Documentation
 
-## Quick Start
-
-### Prerequisites
-
-- Python 3.7 or higher
-- pip (Python package installer)
-
-### Installation
-
-1. Clone this repository:
-   ```bash
-   git clone <repository-url>
-   cd garage
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Run the application:
-   ```bash
-   python app.py
-   ```
-
-4. Open your browser and navigate to:
-   ```
-   http://localhost:5000
-   ```
-
-# Garage Web App
-
-A Python Flask web application that provides secure MySQL-based authentication and allows authenticated users to execute Python scripts on the server. The application is designed to be responsive and work well on both mobile and desktop browsers.
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
+- **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
+- **[SECURITY.md](SECURITY.md)** - Security implementation details
+- **[MIGRATION.md](MIGRATION.md)** - Database migration guide
+- **[network-examples/](network-examples/)** - Network configuration examples
 
 ## Features
 
@@ -56,6 +24,45 @@ A Python Flask web application that provides secure MySQL-based authentication a
 - 🔒 **Environment-based Configuration**: Secure configuration using environment variables
 - 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
 - 🔄 **Connection Pooling**: Efficient database connection pooling for improved performance and resource management
+- 🤖 **Automation HAT Support**: Control relays and read sensors on Raspberry Pi
+
+## Quick Start (Development)
+
+### Prerequisites
+
+- Python 3.7 or higher
+- pip (Python package installer)
+- MySQL 5.7+ or MariaDB 10.2+
+
+### Development Installation
+
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd garage
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set up database and configure `.env` (see Installation section below)
+
+4. Initialize database:
+   ```bash
+   python init_db.py
+   ```
+
+5. Run the application:
+   ```bash
+   python app.py
+   ```
+
+6. Open your browser and navigate to:
+   ```
+   http://localhost:5000
+   ```
 
 ## Prerequisites
 
@@ -120,19 +127,12 @@ DB_USER=garage_user
 DB_PASSWORD=your-secure-database-password
 
 # For SSL connections (optional but recommended)
+# Download the appropriate CA certificate from your database provider
+# For MySQL on Azure, download from: https://learn.microsoft.com/en-us/azure/mysql/
+# For AWS RDS, download from: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
 DB_SSL_CA=/path/to/ca-cert.pem
 DB_SSL_CERT=/path/to/client-cert.pem
 DB_SSL_KEY=/path/to/client-key.pem
-
-# Database Connection Pool Settings (optional)
-# Minimum number of idle connections to keep in pool
-DB_POOL_MIN_SIZE=1
-# Maximum number of connections in pool
-DB_POOL_MAX_SIZE=10
-# Maximum idle time for connections in seconds (default: 300 = 5 minutes)
-DB_POOL_MAX_IDLE=300
-# Maximum number of times a connection can be reused (0 = unlimited)
-DB_POOL_MAX_USAGE=0
 
 # Initial admin user (used for first-time setup)
 DEFAULT_USERNAME=admin
@@ -140,10 +140,11 @@ DEFAULT_PASSWORD=your-secure-admin-password
 ```
 
 **Important Security Notes:**
-- Generate a strong, unique `SECRET_KEY` for production
-- Use strong passwords for both database and admin user
+- Generate a strong, unique `SECRET_KEY` for production using: `python3 -c 'import secrets; print(secrets.token_hex(32))'`
+- Use strong, unique passwords for both database and admin user
 - Never commit the `.env` file to version control
 - Consider using SSL connections for production deployments
+- Change the default admin username to something unique (not 'admin')
 
 ### 5. Initialize the Database
 
@@ -311,6 +312,34 @@ The `database.py` module provides secure methods for:
 - Password updates
 - User account management
 - Secure database connections
+
+## Production Deployment
+
+### 🚀 Raspberry Pi Production Guide
+
+For detailed instructions on deploying this application in a production environment on a Raspberry Pi, see **[PRODUCTION.md](PRODUCTION.md)**.
+
+The production guide includes:
+- Complete Raspberry Pi setup and configuration
+- Automated installation scripts
+- Systemd service configuration for auto-start
+- Nginx reverse proxy setup with HTTPS
+- Database optimization for Raspberry Pi
+- Automated backup and restore procedures
+- System monitoring and health checks
+- Security hardening recommendations
+- Troubleshooting guides
+
+### Quick Production Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ozeltser/garage.git
+cd garage
+
+# Run automated installation (Raspberry Pi)
+sudo bash install_production.sh
+```
 
 ## Security Considerations
 

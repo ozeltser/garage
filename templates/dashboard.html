@@ -7,10 +7,13 @@
     <div class="col-12">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme (auto/light/dark)">
+                    ◐
+                </button>
                 <span class="navbar-brand">Garage Dashboard</span>
                 <div class="navbar-nav ms-auto">
                     <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
-                    <span class="navbar-text me-3">Welcome, {{ current_user.id }}!</span>
+                    <span class="navbar-text me-3">{{ current_user.id }}</span>
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                 </div>
             </div>
@@ -22,11 +25,20 @@
     <div class="col-12 col-md-8 col-lg-6">
         <div class="card shadow">
             <div class="card-body text-center">
-                <h3 class="card-title mb-4">Server Control Panel</h3>
-                <p class="card-text mb-4">Click the button below to execute a Python script on the server.</p>
+                <h3 class="card-title mb-4">Garage Control Panel</h3>
+                <p class="card-text mb-4">Click the button below to open/close garage door.</p>
+                
+                <!-- Garage Door Status Indicator -->
+                <div id="garageStatus" class="garage-status-box mb-4">
+                    <div class="status-label">Garage Door Status</div>
+                    <div class="status-indicator closed">
+                        <span class="status-icon">🏠</span>
+                        <span class="status-text">CLOSED</span>
+                    </div>
+                </div>
                 
                 <button id="runScriptBtn" class="btn btn-success btn-lg">
-                    <span id="btnText">Run Python Script</span>
+                    <span id="btnText">Open/Close Garage Door</span>
                     <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
                 </button>
                 

@@ -160,6 +160,46 @@ def run_script():
             'error': str(e)
         })
 
+@app.route('/door_status', methods=['GET'])
+@login_required
+def door_status():
+    try:
+        # Run the doorStatus.py script to get current door status
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(script_dir, 'doorStatus.py')
+        result = subprocess.run(['python', script_path],
+                              capture_output=True, text=True, timeout=10)
+        
+        # Parse the output to determine door status
+        output = result.stdout.strip()
+        error_output = result.stderr.strip()
+        
+        if 'Door Closed' in output:
+            status = 'closed'
+        elif 'Door Opened' in output:
+            status = 'open'
+        else:
+            # Default to unknown if we can't determine status
+            status = 'unknown'
+        
+        return jsonify({
+            'success': True,
+            'status': status,
+            'raw_output': output,
+            'error': error_output if error_output else None
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'success': False,
+            'error': 'Door status check timed out'
+        })
+    except Exception as e:
+        logger.error(f"Error checking door status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 if __name__ == '__main__':
     host = os.getenv('APP_HOST', '0.0.0.0')
     port = int(os.getenv('APP_PORT', 5000))
