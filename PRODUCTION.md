@@ -293,6 +293,8 @@ DB_USER=garage_user
 DB_PASSWORD=YOUR-STRONG-PASSWORD-HERE
 
 # Default admin credentials (for initial setup only)
+# SECURITY: Use a unique username (not 'admin') and strong password
+# Change these immediately after first login
 DEFAULT_USERNAME=admin
 DEFAULT_PASSWORD=CHANGE-THIS-SECURE-PASSWORD
 ```

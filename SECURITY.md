@@ -44,11 +44,19 @@ DB_NAME=garage_app
 ```
 
 ### Optional SSL Configuration
+For production deployments, SSL/TLS connections to the database are recommended.
+Download CA certificates from your database provider:
+- **MySQL on Azure**: https://learn.microsoft.com/en-us/azure/mysql/
+- **AWS RDS**: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
+- **Google Cloud SQL**: https://cloud.google.com/sql/docs/mysql/configure-ssl-instance
+
 ```bash
 DB_SSL_CA=/path/to/ca-cert.pem
 DB_SSL_CERT=/path/to/client-cert.pem
 DB_SSL_KEY=/path/to/client-key.pem
 ```
+
+**Important**: Never commit certificate files to version control. Store them securely and reference their paths in environment variables.
 
 ## Database Setup Security
 
@@ -70,13 +78,15 @@ FLUSH PRIVILEGES;
 ## Production Security Checklist
 
 ### Before Deployment
-- [ ] Generate strong, unique `SECRET_KEY`
-- [ ] Use secure passwords for all accounts
+- [ ] Generate strong, unique `SECRET_KEY` using: `python3 -c 'import secrets; print(secrets.token_hex(32))'`
+- [ ] Use secure passwords for all accounts (minimum 12 characters)
+- [ ] Change default admin username to something unique (not 'admin')
 - [ ] Configure SSL/TLS for database connections
 - [ ] Set up dedicated database user with minimal privileges
 - [ ] Review and restrict network access to database
 - [ ] Configure proper logging and monitoring
 - [ ] Test backup and recovery procedures
+- [ ] Ensure no secrets or certificates are committed to version control
 
 ### Network Security
 - [ ] Use HTTPS for web application (reverse proxy)
