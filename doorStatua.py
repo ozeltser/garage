@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+import time
+import automationhat
+
+# First, check if the Automation HAT is connected to the Raspberry Pi.
+if automationhat.is_automation_hat():
+    try:
+        input_one_state = automationhat.input.one.read()
+        if(input_one_state > 0):
+            print("Door Closed")
+        else:
+            print("Door Opened")
+    except Exception as e:
+        print("Exception happened:")
+        print(str(e))
+    finally:
+        pass
+else:
+    print("Automation HAT not found.")
