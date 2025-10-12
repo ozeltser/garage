@@ -297,6 +297,34 @@ The `database.py` module provides secure methods for:
 - User account management
 - Secure database connections
 
+## Production Deployment
+
+### 🚀 Raspberry Pi Production Guide
+
+For detailed instructions on deploying this application in a production environment on a Raspberry Pi, see **[PRODUCTION.md](PRODUCTION.md)**.
+
+The production guide includes:
+- Complete Raspberry Pi setup and configuration
+- Automated installation scripts
+- Systemd service configuration for auto-start
+- Nginx reverse proxy setup with HTTPS
+- Database optimization for Raspberry Pi
+- Automated backup and restore procedures
+- System monitoring and health checks
+- Security hardening recommendations
+- Troubleshooting guides
+
+### Quick Production Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ozeltser/garage.git
+cd garage
+
+# Run automated installation (Raspberry Pi)
+sudo bash install_production.sh
+```
+
 ## Security Considerations
 
 ### Production Deployment Checklist
