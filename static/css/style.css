@@ -272,6 +272,7 @@ body {
 .status-text {
     font-size: 1.5rem;
     font-weight: bold;
+    color: var(--status-closed-text);
     transition: color 0.3s ease;
 }
 
