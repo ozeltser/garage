@@ -115,6 +115,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update door status on page load
     updateDoorStatus();
     
+    // Add click handler to garage status box for manual refresh
+    const garageStatus = document.getElementById('garageStatus');
+    if (garageStatus) {
+        garageStatus.addEventListener('click', function() {
+            updateDoorStatus();
+        });
+    }
+    
     const runScriptBtn = document.getElementById('runScriptBtn');
     const btnText = document.getElementById('btnText');
     const initialBtnText = btnText.textContent;
