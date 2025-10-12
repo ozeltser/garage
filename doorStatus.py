@@ -6,7 +6,7 @@ import automationhat
 if automationhat.is_automation_hat():
     try:
         input_one_state = automationhat.input.one.read()
-        if(input_one_state > 0):
+        if input_one_state > 0:
             print("Door Closed")
         else:
             print("Door Opened")
