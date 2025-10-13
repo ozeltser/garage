@@ -183,26 +183,28 @@ Users can manage their profile information by clicking the "Profile" link in the
 
 All profile fields are optional and can be updated independently.
 
-### Adding New Users
-Currently, new users must be added directly to the database. You can use the database manager:
+### Admin User Management (Admin Only)
+The admin user has access to a dedicated user management interface for managing all system users. Access the "Users" link in the navigation bar (visible only to admin users) to:
 
-```python
-from database import DatabaseManager
-from dotenv import load_dotenv
+**Add New Users:**
+- Enter username, password, and password confirmation
+- Users are created with active status by default
+- Usernames must be unique
 
-load_dotenv()
-db_manager = DatabaseManager()
+**Remove Users:**
+- Delete any user account except your own admin account
+- Deletion is permanent and requires confirmation
 
-# Create a new user
-db_manager.create_user('newuser', 'secure-password')
-```
+**Change User Passwords:**
+- Admin can reset passwords for any user
+- No current password verification required when admin changes another user's password
+- Users can still change their own passwords through the Profile page
 
-### Password Management
-To update a user's password:
-```python
-# Update password
-db_manager.update_password('username', 'new-secure-password')
-```
+**Security Features:**
+- Only the admin user (configured via `DEFAULT_USERNAME` in `.env`) can access user management
+- Non-admin users attempting to access user management are denied and redirected
+- Admin cannot delete their own account to prevent lockout
+- All user management actions are logged
 
 ## Project Structure
 
@@ -278,7 +280,12 @@ All sensitive configuration is managed through environment variables in `.env`:
 - `GET /logout`: Logout and redirect to login
 - `GET /profile`: User profile page (requires authentication)
 - `POST /profile`: Update user profile and password (requires authentication)
+- `GET /users`: User management page (requires admin privileges)
+- `POST /users/add`: Add a new user (requires admin privileges)
+- `POST /users/delete`: Delete a user (requires admin privileges)
+- `POST /users/change_password`: Change another user's password (requires admin privileges)
 - `POST /run_script`: Execute the Python script (requires authentication)
+- `GET /door_status`: Get current garage door status (requires authentication)
 
 ## Development
 
@@ -290,23 +297,14 @@ Set `FLASK_DEBUG=True` in your `.env` file for development features:
 
 For production, set `FLASK_DEBUG=False`.
 
-### Adding New Users
-Use the database manager to add users programmatically:
-```python
-from database import DatabaseManager
-from dotenv import load_dotenv
-
-load_dotenv()
-db_manager = DatabaseManager()
-db_manager.create_user('newuser', 'secure-password')
-```
-
 ### Database Management
 The `database.py` module provides secure methods for:
 - User creation and authentication
 - Password updates
 - User account management
 - Secure database connections
+
+**Note:** For adding users in production, use the web-based user management interface (admin users only) or the database manager API programmatically if needed.
 
 ## Production Deployment
 
