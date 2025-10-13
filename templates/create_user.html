@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Create User - Garage App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme (auto/light/dark)">
+                    ◐
+                </button>
+                <span class="navbar-brand">Create New User</span>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('admin') }}">Admin Panel</a>
+                    <a class="nav-link" href="{{ url_for('home') }}">Dashboard</a>
+                    <span class="navbar-text me-3">{{ current_user.id }}</span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Create New User</h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username *</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password *</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role *</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="regular">Regular User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <small class="text-muted">
+                            <strong>Regular users</strong> can operate the door and manage their own profile.<br>
+                            <strong>Admins</strong> can also create/delete users and change any user's password.
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                        <a href="{{ url_for('admin') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

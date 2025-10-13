@@ -75,6 +75,7 @@ class DatabaseManager:
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             username VARCHAR(255) UNIQUE NOT NULL,
                             password_hash VARCHAR(255) NOT NULL,
+                            role VARCHAR(50) NOT NULL DEFAULT 'regular',
                             first_name VARCHAR(255),
                             last_name VARCHAR(255),
                             email VARCHAR(255),
@@ -96,8 +97,8 @@ class DatabaseManager:
                         password_hash = generate_password_hash(default_password)
                         
                         cursor.execute(
-                            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-                            (default_username, password_hash)
+                            "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
+                            (default_username, password_hash, 'admin')
                         )
                         logger.info(f"Initial admin user '{default_username}' created successfully")
                     
@@ -111,7 +112,7 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, password_hash, first_name, last_name, email, phone, is_active FROM users WHERE username = %s AND is_active = TRUE",
+                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, is_active FROM users WHERE username = %s AND is_active = TRUE",
                         (username,)
                     )
                     return cursor.fetchone()
@@ -127,17 +128,17 @@ class DatabaseManager:
         
         return check_password_hash(user['password_hash'], password)
     
-    def create_user(self, username: str, password: str) -> bool:
+    def create_user(self, username: str, password: str, role: str = 'regular') -> bool:
         """Create a new user with hashed password."""
         try:
             password_hash = generate_password_hash(password)
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-                        (username, password_hash)
+                        "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
+                        (username, password_hash, role)
                     )
-                    logger.info(f"User '{username}' created successfully")
+                    logger.info(f"User '{username}' created successfully with role '{role}'")
                     return True
         except pymysql.IntegrityError:
             logger.warning(f"User '{username}' already exists")
@@ -209,4 +210,67 @@ class DatabaseManager:
                         return False
         except Exception as e:
             logger.error(f"Failed to deactivate user {username}: {str(e)}")
+            return False
+    
+    def get_all_users(self) -> list:
+        """Get all active users (admin function)."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT id, username, role, first_name, last_name, email, phone, created_at FROM users WHERE is_active = TRUE ORDER BY created_at DESC"
+                    )
+                    return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Failed to retrieve all users: {str(e)}")
+            return []
+    
+    def delete_user(self, username: str) -> bool:
+        """Delete a user account (admin function)."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    # Prevent deleting the last admin user
+                    cursor.execute("SELECT COUNT(*) as count FROM users WHERE role = 'admin' AND is_active = TRUE")
+                    admin_count = cursor.fetchone()['count']
+                    
+                    cursor.execute("SELECT role FROM users WHERE username = %s AND is_active = TRUE", (username,))
+                    user = cursor.fetchone()
+                    
+                    if user and user['role'] == 'admin' and admin_count <= 1:
+                        logger.warning(f"Cannot delete the last admin user '{username}'")
+                        return False
+                    
+                    cursor.execute(
+                        "DELETE FROM users WHERE username = %s",
+                        (username,)
+                    )
+                    if cursor.rowcount > 0:
+                        logger.info(f"User '{username}' deleted")
+                        return True
+                    else:
+                        logger.warning(f"User '{username}' not found")
+                        return False
+        except Exception as e:
+            logger.error(f"Failed to delete user {username}: {str(e)}")
+            return False
+    
+    def update_user_password_by_admin(self, username: str, new_password: str) -> bool:
+        """Update user password by admin (admin function)."""
+        try:
+            password_hash = generate_password_hash(new_password)
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE users SET password_hash = %s, updated_at = CURRENT_TIMESTAMP WHERE username = %s AND is_active = TRUE",
+                        (password_hash, username)
+                    )
+                    if cursor.rowcount > 0:
+                        logger.info(f"Password updated for user '{username}' by admin")
+                        return True
+                    else:
+                        logger.warning(f"User '{username}' not found or inactive")
+                        return False
+        except Exception as e:
+            logger.error(f"Failed to update password for user {username}: {str(e)}")
             return False

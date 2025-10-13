@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Garage App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme (auto/light/dark)">
+                    ◐
+                </button>
+                <span class="navbar-brand">Admin Panel</span>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('home') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                    <span class="navbar-text me-3">{{ current_user.id }}</span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-10 col-lg-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">User Management</h2>
+                
+                <div class="mb-4">
+                    <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create New User
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>
+                                    {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Regular</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.first_name or '' }} {{ user.last_name or '' }}</td>
+                                <td>{{ user.email or '-' }}</td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin_change_password', username=user.username) }}" 
+                                       class="btn btn-sm btn-warning" title="Change Password">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                    {% if user.username != current_user.id %}
+                                    <form method="POST" action="{{ url_for('admin_delete_user', username=user.username) }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete user {{ user.username }}?');">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete User">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if users|length == 0 %}
+                <div class="alert alert-info text-center">
+                    No users found.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
