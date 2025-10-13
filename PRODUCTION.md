@@ -265,7 +265,7 @@ sudo systemctl restart mariadb
 ### 1. Create Environment File
 
 ```bash
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage/app
 
 # Copy example and edit
@@ -330,7 +330,7 @@ sudo chmod 755 /opt/garage/app/*.py
 ### 4. Test Application
 
 ```bash
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage/app
 source venv/bin/activate
 python app.py
@@ -939,7 +939,7 @@ sudo i2cdetect -y 1
 groups garage
 
 # Reinstall automationhat library
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage/app
 source venv/bin/activate
 pip install --upgrade automationhat
@@ -992,7 +992,7 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 sudo systemctl stop garage.service
 
 # Backup current version
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage
 cp -r app app.backup.$(date +%Y%m%d)
 
@@ -1040,7 +1040,7 @@ sudo reboot
 ### 3. Update Python Dependencies
 
 ```bash
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage/app
 source venv/bin/activate
 
@@ -1067,7 +1067,7 @@ If an update causes issues:
 sudo systemctl stop garage.service
 
 # Restore from backup
-sudo su - garage
+sudo su - garage -s /bin/bash
 cd /opt/garage
 rm -rf app
 mv app.backup.YYYYMMDD app
