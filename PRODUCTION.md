@@ -349,7 +349,7 @@ exit
 
 ## Systemd Service Setup
 
-### 1. Create Systemd Service File
+### 1. Create Systemd Service File (Or Copy Existing File from `/opt/garge/app/` folder)
 
 ```bash
 sudo nano /etc/systemd/system/garage.service
