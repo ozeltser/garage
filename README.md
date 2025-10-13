@@ -8,6 +8,8 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
 - **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
+- **[RBAC_QUICKSTART.md](RBAC_QUICKSTART.md)** - Quick guide for RBAC features ⭐ NEW
+- **[RBAC.md](RBAC.md)** - Complete RBAC documentation ⭐ NEW
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[SECURITY.md](SECURITY.md)** - Security implementation details
 - **[MIGRATION.md](MIGRATION.md)** - Database migration guide
@@ -16,8 +18,11 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 ## Features
 
 - 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
+- 👥 **Role-Based Access Control (RBAC)**: Admin and Regular user roles with different permissions ⭐ NEW
 - 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
 - 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
+- 👤 **User Profile Management**: Edit user information and change passwords
+- 🔧 **Admin Panel**: Create, delete users and manage passwords (Admin only) ⭐ NEW
 - 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
 - ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
 - 📊 **Output Display**: View script output and errors in real-time
