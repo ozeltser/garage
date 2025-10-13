@@ -359,71 +359,36 @@ def internal_error(e):
 
 ### 7. Dependency Vulnerability Scanning
 
-**Priority**: HIGH  
+**Priority**: MEDIUM  
 **Effort**: Low (15 minutes)
 
-#### Enable GitHub Dependabot
+#### Manual Dependency Scanning
 
-Create `.github/dependabot.yml`:
+For manual dependency vulnerability scanning, you can use tools like:
 
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "ozeltser"
-    labels:
-      - "dependencies"
-      - "security"
+```bash
+# Install safety for Python dependency checking
+pip install safety
+
+# Check for known vulnerabilities
+safety check --file requirements.txt
 ```
 
-#### Enable GitHub Secret Scanning
+#### Optional: Enable GitHub Security Features
 
-1. Go to repository Settings
-2. Navigate to Code security and analysis
-3. Enable "Secret scanning"
-4. Enable "Push protection"
+If your repository is public or you have GitHub Advanced Security, you can optionally enable:
 
-#### Enable GitHub Code Scanning
+1. **GitHub Secret Scanning**
+   - Go to repository Settings → Code security and analysis
+   - Enable "Secret scanning" (if available)
+   - Enable "Push protection" (if available)
 
-Create `.github/workflows/codeql.yml`:
+2. **GitHub Dependabot**
+   - Go to repository Settings → Code security and analysis
+   - Enable "Dependabot alerts"
+   - Enable "Dependabot security updates"
 
-```yaml
-name: "CodeQL"
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '0 0 * * 1'  # Weekly on Monday
-
-jobs:
-  analyze:
-    name: Analyze
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: python
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-```
+Note: These features may require specific GitHub plans or repository visibility settings.
 
 ---
 
@@ -544,8 +509,8 @@ Before deploying these changes to production:
 - Review security alerts
 
 **Weekly:**
-- Check Dependabot alerts
 - Review security logs
+- Check for security updates
 
 **Monthly:**
 - Update dependencies
