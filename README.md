@@ -8,8 +8,10 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
 - **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[SECURITY.md](SECURITY.md)** - Security implementation details
+- **[SECURITY_AUDIT_2025.md](SECURITY_AUDIT_2025.md)** - 🆕 Comprehensive security audit report
+- **[SECURITY_IMPROVEMENTS.md](SECURITY_IMPROVEMENTS.md)** - 🆕 Implementation guide for security enhancements
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[MIGRATION.md](MIGRATION.md)** - Database migration guide
 - **[network-examples/](network-examples/)** - Network configuration examples
 

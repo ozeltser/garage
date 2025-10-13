@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def check_column_exists(cursor, table_name, column_name):
     """Check if a column exists in a table."""
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT COUNT(*) as count
         FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA = DATABASE()
@@ -83,6 +83,12 @@ def migrate_database():
                 
                 for column_name, column_type in columns_to_add:
                     print(f"  Adding column '{column_name}' ({column_type})...")
+                    # Validate column name to prevent SQL injection
+                    if not column_name.replace('_', '').isalnum():
+                        raise ValueError(f"Invalid column name: {column_name}")
+                    if column_name not in column_definitions:
+                        raise ValueError(f"Unknown column: {column_name}")
+                    # Use string formatting only with validated whitelist values
                     cursor.execute(f"""
                         ALTER TABLE users
                         ADD COLUMN {column_name} {column_type} AFTER password_hash
