@@ -210,3 +210,35 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Failed to deactivate user {username}: {str(e)}")
             return False
+    
+    def get_all_users(self):
+        """Get all active users from the database."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT id, username, first_name, last_name, email, phone, created_at, updated_at FROM users WHERE is_active = TRUE ORDER BY username"
+                    )
+                    return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Failed to retrieve users: {str(e)}")
+            return []
+    
+    def delete_user(self, username: str) -> bool:
+        """Delete a user from the database."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "DELETE FROM users WHERE username = %s",
+                        (username,)
+                    )
+                    if cursor.rowcount > 0:
+                        logger.info(f"User '{username}' deleted")
+                        return True
+                    else:
+                        logger.warning(f"User '{username}' not found")
+                        return False
+        except Exception as e:
+            logger.error(f"Failed to delete user {username}: {str(e)}")
+            return False

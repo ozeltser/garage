@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from functools import wraps
 import subprocess
 import os
 import logging
@@ -33,6 +34,20 @@ class User(UserMixin):
         self.id = username
         self.user_id = user_id
 
+def admin_required(f):
+    """Decorator to require admin privileges for a route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        # Check if user is admin
+        admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+        if current_user.id != admin_username:
+            flash('Access denied. Admin privileges required.', 'error')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @login_manager.user_loader
 def load_user(user_id):
     """Load user from database by username."""
@@ -44,7 +59,8 @@ def load_user(user_id):
 @app.route('/')
 def home():
     if current_user.is_authenticated:
-        return render_template('dashboard.html')
+        admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+        return render_template('dashboard.html', admin_username=admin_username)
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -125,7 +141,92 @@ def profile():
     
     # GET request - display profile form
     user_data = db_manager.get_user_by_username(current_user.id)
-    return render_template('profile.html', user=user_data)
+    admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+    return render_template('profile.html', user=user_data, admin_username=admin_username)
+
+@app.route('/users', methods=['GET'])
+@login_required
+@admin_required
+def manage_users():
+    """Display user management page (admin only)."""
+    users = db_manager.get_all_users()
+    admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+    return render_template('users.html', users=users, admin_username=admin_username)
+
+@app.route('/users/add', methods=['POST'])
+@login_required
+@admin_required
+def add_user():
+    """Add a new user (admin only)."""
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+    
+    if not username or not password:
+        flash('Username and password are required', 'error')
+        return redirect(url_for('manage_users'))
+    
+    if password != confirm_password:
+        flash('Passwords do not match', 'error')
+        return redirect(url_for('manage_users'))
+    
+    if db_manager.create_user(username, password):
+        flash(f'User "{username}" created successfully', 'success')
+        logger.info(f"Admin '{current_user.id}' created user '{username}'")
+    else:
+        flash(f'Failed to create user "{username}". User may already exist.', 'error')
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/users/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user():
+    """Delete a user (admin only)."""
+    username = request.form.get('username', '').strip()
+    admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+    
+    if not username:
+        flash('Username is required', 'error')
+        return redirect(url_for('manage_users'))
+    
+    # Prevent admin from deleting themselves
+    if username == current_user.id:
+        flash('You cannot delete your own account', 'error')
+        return redirect(url_for('manage_users'))
+    
+    if db_manager.delete_user(username):
+        flash(f'User "{username}" deleted successfully', 'success')
+        logger.info(f"Admin '{current_user.id}' deleted user '{username}'")
+    else:
+        flash(f'Failed to delete user "{username}"', 'error')
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/users/change_password', methods=['POST'])
+@login_required
+@admin_required
+def change_user_password():
+    """Change another user's password (admin only)."""
+    username = request.form.get('username', '').strip()
+    new_password = request.form.get('new_password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+    
+    if not username or not new_password:
+        flash('Username and new password are required', 'error')
+        return redirect(url_for('manage_users'))
+    
+    if new_password != confirm_password:
+        flash('Passwords do not match', 'error')
+        return redirect(url_for('manage_users'))
+    
+    if db_manager.update_password(username, new_password):
+        flash(f'Password updated for user "{username}"', 'success')
+        logger.info(f"Admin '{current_user.id}' changed password for user '{username}'")
+    else:
+        flash(f'Failed to update password for user "{username}"', 'error')
+    
+    return redirect(url_for('manage_users'))
 
 @app.route('/run_script', methods=['POST'])
 @login_required
