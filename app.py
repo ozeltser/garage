@@ -195,7 +195,7 @@ def door_status():
 if __name__ == '__main__':
     host = os.getenv('APP_HOST', '0.0.0.0')
     port = int(os.getenv('APP_PORT', 5000))
-    debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
     logger.info(f"Starting Garage Web App on {host}:{port} (debug={debug})")
     app.run(debug=debug, host=host, port=port)
