@@ -336,7 +336,7 @@ source venv/bin/activate
 python app.py
 ```
 
-Access from another computer: `http://<raspberry-pi-ip>:5000`
+Open another shell on the same device and check if the app is working: `curl http://<raspberry-pi-ip>:5000`. You should see redirect message to `/login` page.
 
 If it works, stop it (Ctrl+C) and exit:
 
