@@ -6,6 +6,7 @@ import os
 import sys
 import pymysql
 from dotenv import load_dotenv
+from user_roles import UserRole
 
 # Load environment variables
 load_dotenv()
@@ -50,10 +51,10 @@ def main():
                                  (os.getenv('DEFAULT_USERNAME', 'admin'),))
                     admin_user = cursor.fetchone()
                     
-                    if admin_user and admin_user['role'] != 'admin':
-                        print(f"Updating admin user '{admin_user['username']}' role to 'admin'...")
-                        cursor.execute("UPDATE users SET role = 'admin' WHERE username = %s", 
-                                     (admin_user['username'],))
+                    if admin_user and admin_user['role'] != UserRole.ADMIN.value:
+                        print(f"Updating admin user '{admin_user['username']}' role to '{UserRole.ADMIN.value}'...")
+                        cursor.execute("UPDATE users SET role = %s WHERE username = %s", 
+                                     (UserRole.ADMIN.value, admin_user['username']))
                         print(f"✓ Admin user role updated")
                     elif admin_user:
                         print(f"✓ Admin user '{admin_user['username']}' already has admin role")
@@ -64,9 +65,9 @@ def main():
                     print("=" * 60)
                 else:
                     print("Adding role column to users table...")
-                    cursor.execute("""
+                    cursor.execute(f"""
                         ALTER TABLE users 
-                        ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'regular'
+                        ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT '{UserRole.REGULAR.value}'
                         AFTER password_hash
                     """)
                     print("✓ Role column added successfully")
@@ -74,8 +75,8 @@ def main():
                     
                     # Set the first admin user to have admin role
                     admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
-                    cursor.execute("UPDATE users SET role = 'admin' WHERE username = %s", (admin_username,))
-                    print(f"✓ Admin user '{admin_username}' role set to 'admin'")
+                    cursor.execute("UPDATE users SET role = %s WHERE username = %s", (UserRole.ADMIN.value, admin_username))
+                    print(f"✓ Admin user '{admin_username}' role set to '{UserRole.ADMIN.value}'")
                     print()
                     
                     print("=" * 60)
@@ -84,7 +85,7 @@ def main():
                     print()
                     print("Summary:")
                     print("  - Added 'role' column to 'users' table")
-                    print("  - Set default role to 'regular' for new users")
+                    print(f"  - Set default role to '{UserRole.REGULAR.value}' for new users")
                     print(f"  - Set admin role for user '{admin_username}'")
                     print()
                 

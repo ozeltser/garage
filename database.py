@@ -6,6 +6,7 @@ import pymysql
 import logging
 from typing import Optional, Dict, Any
 from werkzeug.security import generate_password_hash, check_password_hash
+from user_roles import UserRole
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -70,12 +71,12 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     # Create users table if it doesn't exist
-                    cursor.execute("""
+                    cursor.execute(f"""
                         CREATE TABLE IF NOT EXISTS users (
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             username VARCHAR(255) UNIQUE NOT NULL,
                             password_hash VARCHAR(255) NOT NULL,
-                            role VARCHAR(50) NOT NULL DEFAULT 'regular',
+                            role VARCHAR(50) NOT NULL DEFAULT '{UserRole.REGULAR.value}',
                             first_name VARCHAR(255),
                             last_name VARCHAR(255),
                             email VARCHAR(255),
@@ -98,7 +99,7 @@ class DatabaseManager:
                         
                         cursor.execute(
                             "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
-                            (default_username, password_hash, 'admin')
+                            (default_username, password_hash, UserRole.ADMIN.value)
                         )
                         logger.info(f"Initial admin user '{default_username}' created successfully")
                     
@@ -128,8 +129,11 @@ class DatabaseManager:
         
         return check_password_hash(user['password_hash'], password)
     
-    def create_user(self, username: str, password: str, role: str = 'regular') -> bool:
+    def create_user(self, username: str, password: str, role: str = None) -> bool:
         """Create a new user with hashed password."""
+        if role is None:
+            role = UserRole.REGULAR.value
+        
         try:
             password_hash = generate_password_hash(password)
             with self.get_connection() as connection:
@@ -231,13 +235,13 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     # Prevent deleting the last admin user
-                    cursor.execute("SELECT COUNT(*) as count FROM users WHERE role = 'admin' AND is_active = TRUE")
+                    cursor.execute(f"SELECT COUNT(*) as count FROM users WHERE role = %s AND is_active = TRUE", (UserRole.ADMIN.value,))
                     admin_count = cursor.fetchone()['count']
                     
                     cursor.execute("SELECT role FROM users WHERE username = %s AND is_active = TRUE", (username,))
                     user = cursor.fetchone()
                     
-                    if user and user['role'] == 'admin' and admin_count <= 1:
+                    if user and user['role'] == UserRole.ADMIN.value and admin_count <= 1:
                         logger.warning(f"Cannot delete the last admin user '{username}'")
                         return False
                     

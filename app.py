@@ -6,6 +6,7 @@ import os
 import logging
 from dotenv import load_dotenv
 from database import DatabaseManager
+from user_roles import UserRole
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,20 +31,20 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 class User(UserMixin):
-    def __init__(self, username, user_id=None, role='regular'):
+    def __init__(self, username, user_id=None, role=None):
         self.id = username
         self.user_id = user_id
-        self.role = role
+        self.role = role if role else UserRole.REGULAR.value
     
     def is_admin(self):
-        return self.role == 'admin'
+        return self.role == UserRole.ADMIN.value
 
 @login_manager.user_loader
 def load_user(user_id):
     """Load user from database by username."""
     user_data = db_manager.get_user_by_username(user_id)
     if user_data:
-        return User(user_data['username'], user_data['id'], user_data.get('role', 'regular'))
+        return User(user_data['username'], user_data['id'], user_data.get('role', UserRole.REGULAR.value))
     return None
 
 def admin_required(f):
@@ -72,7 +73,7 @@ def login():
             if db_manager.verify_password(username, password):
                 user_data = db_manager.get_user_by_username(username)
                 if user_data:
-                    user = User(user_data['username'], user_data['id'], user_data.get('role', 'regular'))
+                    user = User(user_data['username'], user_data['id'], user_data.get('role', UserRole.REGULAR.value))
                     login_user(user)
                     logger.info(f"User '{username}' logged in successfully")
                     return redirect(url_for('home'))
@@ -224,13 +225,13 @@ def admin_create_user():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
-        role = request.form.get('role', 'regular')
+        role = request.form.get('role', UserRole.REGULAR.value)
         
         if not username or not password:
             flash('Username and password are required', 'error')
         elif password != confirm_password:
             flash('Passwords do not match', 'error')
-        elif role not in ['admin', 'regular']:
+        elif not UserRole.is_valid(role):
             flash('Invalid role specified', 'error')
         else:
             if db_manager.create_user(username, password, role):

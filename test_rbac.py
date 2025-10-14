@@ -36,22 +36,23 @@ def test_user_class():
         with mock.patch('database.DatabaseManager.get_connection'):
             with mock.patch('database.DatabaseManager._ensure_database_setup'):
                 from app import User
+                from user_roles import UserRole
                 
                 # Test regular user
-                regular_user = User('testuser', 1, 'regular')
-                assert regular_user.role == 'regular'
+                regular_user = User('testuser', 1, UserRole.REGULAR.value)
+                assert regular_user.role == UserRole.REGULAR.value
                 assert regular_user.is_admin() == False
                 print("✓ Regular user creation and is_admin() check passed")
                 
                 # Test admin user
-                admin_user = User('admin', 2, 'admin')
-                assert admin_user.role == 'admin'
+                admin_user = User('admin', 2, UserRole.ADMIN.value)
+                assert admin_user.role == UserRole.ADMIN.value
                 assert admin_user.is_admin() == True
                 print("✓ Admin user creation and is_admin() check passed")
                 
                 # Test default role
                 default_user = User('default', 3)
-                assert default_user.role == 'regular'
+                assert default_user.role == UserRole.REGULAR.value
                 assert default_user.is_admin() == False
                 print("✓ Default role assignment passed")
                 
