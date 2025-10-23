@@ -146,7 +146,20 @@ All tests should pass.
 
 ### 2. Test SMS Sending
 
-Create a simple test script to verify Twilio integration:
+Use the provided integration test script:
+
+```bash
+python3 test_sms_integration.py
+```
+
+This will:
+- Check if SMS notifications are configured
+- Send test notifications for door open/closed events
+- Verify messages are delivered
+
+If SMS is configured, you should receive 2 test messages on your phone(s).
+
+Alternatively, create a simple test script to verify Twilio integration:
 
 ```python
 from dotenv import load_dotenv
