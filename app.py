@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from functools import wraps
 import subprocess
 import os
 import logging
 from dotenv import load_dotenv
 from database import DatabaseManager
+from user_roles import UserRole
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,17 +31,31 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 class User(UserMixin):
-    def __init__(self, username, user_id=None):
+    def __init__(self, username, user_id=None, role=None):
         self.id = username
         self.user_id = user_id
+        self.role = role if role else UserRole.REGULAR.value
+    
+    def is_admin(self):
+        return self.role == UserRole.ADMIN.value
 
 @login_manager.user_loader
 def load_user(user_id):
     """Load user from database by username."""
     user_data = db_manager.get_user_by_username(user_id)
     if user_data:
-        return User(user_data['username'], user_data['id'])
+        return User(user_data['username'], user_data['id'], user_data.get('role', UserRole.REGULAR.value))
     return None
+
+def admin_required(f):
+    """Decorator to require admin role for a route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            flash('Access denied. Admin privileges required.', 'error')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def home():
@@ -57,7 +73,7 @@ def login():
             if db_manager.verify_password(username, password):
                 user_data = db_manager.get_user_by_username(username)
                 if user_data:
-                    user = User(user_data['username'], user_data['id'])
+                    user = User(user_data['username'], user_data['id'], user_data.get('role', UserRole.REGULAR.value))
                     login_user(user)
                     logger.info(f"User '{username}' logged in successfully")
                     return redirect(url_for('home'))
@@ -191,6 +207,81 @@ def door_status():
             'success': False,
             'error': str(e)
         })
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin():
+    """Admin dashboard."""
+    users = db_manager.get_all_users()
+    return render_template('admin.html', users=users)
+
+@app.route('/admin/create_user', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_create_user():
+    """Create a new user (admin only)."""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        role = request.form.get('role', UserRole.REGULAR.value)
+        
+        if not username or not password:
+            flash('Username and password are required', 'error')
+        elif password != confirm_password:
+            flash('Passwords do not match', 'error')
+        elif not UserRole.is_valid(role):
+            flash('Invalid role specified', 'error')
+        else:
+            if db_manager.create_user(username, password, role):
+                flash(f'User {username} created successfully', 'success')
+                return redirect(url_for('admin'))
+            else:
+                flash(f'Failed to create user {username}. Username may already exist.', 'error')
+    
+    return render_template('create_user.html')
+
+@app.route('/admin/delete_user/<username>', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_user(username):
+    """Delete a user (admin only)."""
+    if username == current_user.id:
+        flash('You cannot delete your own account', 'error')
+    elif db_manager.delete_user(username):
+        flash(f'User {username} deleted successfully', 'success')
+    else:
+        flash(f'Failed to delete user {username}', 'error')
+    
+    return redirect(url_for('admin'))
+
+@app.route('/admin/change_password/<username>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_change_password(username):
+    """Change a user's password (admin only)."""
+    if request.method == 'POST':
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        if not new_password:
+            flash('Password is required', 'error')
+        elif new_password != confirm_password:
+            flash('Passwords do not match', 'error')
+        else:
+            if db_manager.update_user_password_by_admin(username, new_password):
+                flash(f'Password updated successfully for user {username}', 'success')
+                return redirect(url_for('admin'))
+            else:
+                flash(f'Failed to update password for user {username}', 'error')
+    
+    user_data = db_manager.get_user_by_username(username)
+    if not user_data:
+        flash(f'User {username} not found', 'error')
+        return redirect(url_for('admin'))
+    
+    return render_template('change_password.html', user=user_data)
 
 if __name__ == '__main__':
     host = os.getenv('APP_HOST', '0.0.0.0')
