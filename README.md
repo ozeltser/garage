@@ -19,6 +19,7 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 
 - 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
 - 👥 **Role-Based Access Control (RBAC)**: Admin and Regular user roles with different permissions ⭐ NEW
+- ⚡ **Database Connection Pooling**: Optimized connection reuse for improved performance and resource efficiency ⭐ NEW
 - 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
 - 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
 - 👤 **User Profile Management**: Edit user information and change passwords
@@ -130,6 +131,12 @@ DB_NAME=garage_app
 DB_USER=garage_user
 DB_PASSWORD=your-secure-database-password
 
+# Database Connection Pool Configuration
+# Minimum number of idle connections to keep in the pool
+DB_POOL_SIZE=5
+# Maximum number of connections allowed in the pool
+DB_POOL_MAX_CONNECTIONS=10
+
 # For SSL connections (optional but recommended)
 # Download the appropriate CA certificate from your database provider
 # For MySQL on Azure, download from: https://learn.microsoft.com/en-us/azure/mysql/
@@ -238,6 +245,7 @@ garage/
 
 ### Security Features
 - ✅ **MySQL Database Authentication**: No more hardcoded passwords
+- ✅ **Connection Pooling**: Efficient database connection reuse for better performance
 - ✅ **Environment Variable Configuration**: Secrets stored securely outside code
 - ✅ **Password Hashing**: Uses Werkzeug's secure password hashing
 - ✅ **Optional SSL/TLS**: Secure database connections
@@ -255,6 +263,8 @@ All sensitive configuration is managed through environment variables in `.env`:
 | `DB_NAME` | Database name | Yes |
 | `DB_USER` | Database username | Yes |
 | `DB_PASSWORD` | Database password | Yes |
+| `DB_POOL_SIZE` | Minimum idle connections in pool | No (default: 5) |
+| `DB_POOL_MAX_CONNECTIONS` | Maximum connections in pool | No (default: 10) |
 | `DB_SSL_CA` | SSL CA certificate path | No |
 | `DB_SSL_CERT` | SSL client certificate path | No |
 | `DB_SSL_KEY` | SSL client key path | No |
@@ -312,6 +322,19 @@ The `database.py` module provides secure methods for:
 - Password updates
 - User account management
 - Secure database connections
+
+### Connection Pooling
+The application uses DBUtils to implement connection pooling for MySQL database connections. This improves performance and reduces resource consumption by:
+- **Reusing connections**: Avoiding the overhead of creating new connections for each database operation
+- **Connection health checks**: Automatically validating connections before use (ping=1)
+- **Resource management**: Limiting the maximum number of concurrent connections
+- **Blocking behavior**: Waiting for available connections when the pool is exhausted
+
+Connection pool configuration can be customized via environment variables:
+- `DB_POOL_SIZE`: Minimum number of idle connections to keep in the pool (default: 5)
+- `DB_POOL_MAX_CONNECTIONS`: Maximum number of connections allowed in the pool (default: 10)
+
+The pool is initialized once when the `DatabaseManager` is created and connections are automatically returned to the pool when released.
 
 ## Production Deployment
 
