@@ -1,0 +1,20 @@
+[Unit]
+Description=Garage Door Status Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/garage
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/python3 /home/pi/garage/door_monitor.py
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=garage-door-monitor
+
+[Install]
+WantedBy=multi-user.target
