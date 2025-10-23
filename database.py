@@ -7,6 +7,7 @@ import logging
 from typing import Optional, Dict, Any
 from werkzeug.security import generate_password_hash, check_password_hash
 from user_roles import UserRole
+from dbutils.pooled_db import PooledDB
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -14,11 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
-    """Manages secure MySQL database connections and user operations."""
+    """Manages secure MySQL database connections and user operations with connection pooling."""
     
     def __init__(self):
-        """Initialize database manager with secure connection parameters."""
+        """Initialize database manager with secure connection parameters and connection pool."""
         self.connection_params = self._get_connection_params()
+        self._init_connection_pool()
         self._ensure_database_setup()
     
     def _get_connection_params(self) -> Dict[str, Any]:
@@ -55,14 +57,35 @@ class DatabaseManager:
         
         return params
     
-    def get_connection(self):
-        """Get a secure database connection."""
+    def _init_connection_pool(self):
+        """Initialize the database connection pool."""
+        # Get pool configuration from environment variables with sensible defaults
+        pool_size = int(os.getenv('DB_POOL_SIZE', 5))
+        max_connections = int(os.getenv('DB_POOL_MAX_CONNECTIONS', 10))
+        
         try:
-            connection = pymysql.connect(**self.connection_params)
-            logger.info("Database connection established successfully")
+            self.pool = PooledDB(
+                creator=pymysql,
+                maxconnections=max_connections,  # Maximum number of connections allowed
+                mincached=pool_size,  # Minimum number of idle connections to keep in the pool
+                maxcached=pool_size,  # Maximum number of idle connections in the pool
+                blocking=True,  # Block if pool limit is reached
+                ping=1,  # Check connections before using (1 = always check)
+                **self.connection_params
+            )
+            logger.info(f"Database connection pool initialized (min: {pool_size}, max: {max_connections})")
+        except Exception as e:
+            logger.error(f"Failed to initialize connection pool: {str(e)}")
+            raise
+    
+    def get_connection(self):
+        """Get a database connection from the pool."""
+        try:
+            connection = self.pool.connection()
+            logger.debug("Database connection retrieved from pool")
             return connection
         except Exception as e:
-            logger.error(f"Failed to connect to database: {str(e)}")
+            logger.error(f"Failed to get connection from pool: {str(e)}")
             raise
     
     def _ensure_database_setup(self):
