@@ -8,8 +8,9 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
 - **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
-- **[RBAC_QUICKSTART.md](RBAC_QUICKSTART.md)** - Quick guide for RBAC features ⭐ NEW
-- **[RBAC.md](RBAC.md)** - Complete RBAC documentation ⭐ NEW
+- **[SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md)** - SMS notification setup guide ⭐ NEW
+- **[RBAC_QUICKSTART.md](RBAC_QUICKSTART.md)** - Quick guide for RBAC features
+- **[RBAC.md](RBAC.md)** - Complete RBAC documentation
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[SECURITY.md](SECURITY.md)** - Security implementation details
 - **[MIGRATION.md](MIGRATION.md)** - Database migration guide
@@ -18,17 +19,18 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 ## Features
 
 - 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
-- 👥 **Role-Based Access Control (RBAC)**: Admin and Regular user roles with different permissions ⭐ NEW
+- 👥 **Role-Based Access Control (RBAC)**: Admin and Regular user roles with different permissions
 - 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
 - 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
 - 👤 **User Profile Management**: Edit user information and change passwords
-- 🔧 **Admin Panel**: Create, delete users and manage passwords (Admin only) ⭐ NEW
+- 🔧 **Admin Panel**: Create, delete users and manage passwords (Admin only)
 - 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
 - ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
 - 📊 **Output Display**: View script output and errors in real-time
 - 🔒 **Environment-based Configuration**: Secure configuration using environment variables
 - 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
 - 🤖 **Automation HAT Support**: Control relays and read sensors on Raspberry Pi
+- 📲 **SMS Notifications**: Automatic text messages when door opens or closes ⭐ NEW
 
 ## Quick Start (Development)
 
@@ -209,29 +211,56 @@ To update a user's password:
 db_manager.update_password('username', 'new-secure-password')
 ```
 
+## SMS Notifications
+
+The application supports automatic SMS notifications when the garage door opens or closes. This feature uses Twilio to send text messages to configured phone numbers.
+
+### Quick Setup
+
+1. **Get Twilio credentials**: Sign up at [twilio.com](https://www.twilio.com) and get a phone number
+2. **Configure environment variables** in `.env`:
+   ```bash
+   TWILIO_ACCOUNT_SID=your_account_sid
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_FROM_PHONE=+15551234567
+   TWILIO_TO_PHONES=+15559876543,+15551112222
+   ```
+3. **Start the door monitor service**:
+   ```bash
+   sudo systemctl enable garage-door-monitor
+   sudo systemctl start garage-door-monitor
+   ```
+
+For complete setup instructions, configuration options, and troubleshooting, see **[SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md)**.
+
 ## Project Structure
 
 ```
 garage/
-├── app.py                 # Main Flask application with MySQL authentication
-├── database.py            # Database manager for secure MySQL operations
-├── init_db.py            # Database initialization script
-├── migrate_db.py         # Database migration script for schema updates
-├── requirements.txt       # Python dependencies
-├── relay.py              # Example Python script to execute
-├── .env.example          # Environment variables template
-├── .gitignore           # Git ignore file (excludes .env)
-├── MIGRATION.md          # Database migration guide
+├── app.py                          # Main Flask application with MySQL authentication
+├── database.py                     # Database manager for secure MySQL operations
+├── init_db.py                      # Database initialization script
+├── migrate_db.py                   # Database migration script for schema updates
+├── notification_service.py         # SMS notification service (Twilio) ⭐ NEW
+├── door_monitor.py                 # Background service to monitor door status ⭐ NEW
+├── garage-door-monitor.service     # Systemd service file for door monitor ⭐ NEW
+├── requirements.txt                # Python dependencies
+├── relay.py                        # Example Python script to execute
+├── doorStatus.py                   # Script to check door status
+├── .env.example                    # Environment variables template
+├── .gitignore                      # Git ignore file (excludes .env)
+├── MIGRATION.md                    # Database migration guide
+├── SMS_NOTIFICATIONS.md            # SMS notification setup guide ⭐ NEW
 ├── templates/
-│   ├── base.html         # Base template with common layout
-│   ├── login.html        # Login page template
-│   ├── dashboard.html    # Dashboard template
-│   └── profile.html      # User profile page template
+│   ├── base.html                   # Base template with common layout
+│   ├── login.html                  # Login page template
+│   ├── dashboard.html              # Dashboard template
+│   └── profile.html                # User profile page template
 └── static/
     ├── css/
-    │   └── style.css     # Custom styles for responsive design
+    │   └── style.css               # Custom styles for responsive design
     └── js/
-        └── app.js        # JavaScript for AJAX and interactions
+        └── app.js                  # JavaScript for AJAX and interactions
 ```
 
 ## Configuration
