@@ -3,6 +3,9 @@
 {% block title %}Dashboard - Garage App{% endblock %}
 
 {% block content %}
+<!-- Hidden input to pass door refresh interval to JavaScript -->
+<input type="hidden" id="doorRefreshInterval" value="{{ door_refresh_interval }}">
+
 <div class="row">
     <div class="col-12">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">

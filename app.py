@@ -60,7 +60,9 @@ def admin_required(f):
 @app.route('/')
 def home():
     if current_user.is_authenticated:
-        return render_template('dashboard.html')
+        # Get door status refresh interval from environment (default 10 seconds)
+        refresh_interval = int(os.getenv('DOOR_STATUS_REFRESH_INTERVAL', '10'))
+        return render_template('dashboard.html', door_refresh_interval=refresh_interval)
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])

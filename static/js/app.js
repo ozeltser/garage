@@ -63,6 +63,10 @@ function toggleTheme() {
 // Initialize theme before DOMContentLoaded to prevent flash
 initTheme();
 
+// Global variable to track the current door status and polling
+let currentDoorStatus = null;
+let doorStatusInterval = null;
+
 // Function to update door status display
 function updateDoorStatus() {
     fetch('/door_status', {
@@ -79,15 +83,18 @@ function updateDoorStatus() {
             const statusText = document.querySelector('.status-text');
             
             if (statusIndicator && statusIcon && statusText) {
+                const newStatus = data.status;
+                const previousStatus = currentDoorStatus;
+                
                 // Remove existing status classes
                 statusIndicator.classList.remove('closed', 'open');
                 
                 // Update based on door status
-                if (data.status === 'closed') {
+                if (newStatus === 'closed') {
                     statusIndicator.classList.add('closed');
                     statusIcon.textContent = '🏠';
                     statusText.textContent = 'CLOSED';
-                } else if (data.status === 'open') {
+                } else if (newStatus === 'open') {
                     statusIndicator.classList.add('open');
                     statusIcon.textContent = '🚪';
                     statusText.textContent = 'OPEN';
@@ -97,12 +104,68 @@ function updateDoorStatus() {
                     statusIcon.textContent = '❓';
                     statusText.textContent = 'UNKNOWN';
                 }
+                
+                // Check if status changed and trigger event
+                if (previousStatus !== null && previousStatus !== newStatus) {
+                    onDoorStatusChanged(previousStatus, newStatus);
+                }
+                
+                // Update current status
+                currentDoorStatus = newStatus;
             }
         }
     })
     .catch(error => {
         console.error('Error fetching door status:', error);
     });
+}
+
+// Function to handle door status changes
+// This provides extensibility for future actions when door status changes
+function onDoorStatusChanged(oldStatus, newStatus) {
+    console.log(`Door status changed from ${oldStatus} to ${newStatus}`);
+    
+    // Future actions can be added here, such as:
+    // - Sending notifications
+    // - Logging to a server
+    // - Triggering other UI updates
+    // - Playing sounds
+    // etc.
+    
+    // Dispatch custom event for other parts of the application
+    const event = new CustomEvent('doorStatusChanged', {
+        detail: {
+            oldStatus: oldStatus,
+            newStatus: newStatus,
+            timestamp: new Date()
+        }
+    });
+    document.dispatchEvent(event);
+}
+
+// Function to start automatic door status polling
+function startDoorStatusPolling(intervalSeconds) {
+    // Clear any existing interval
+    if (doorStatusInterval) {
+        clearInterval(doorStatusInterval);
+    }
+    
+    // Convert seconds to milliseconds
+    const intervalMs = intervalSeconds * 1000;
+    
+    // Set up periodic polling
+    doorStatusInterval = setInterval(updateDoorStatus, intervalMs);
+    
+    console.log(`Door status polling started with ${intervalSeconds} second interval`);
+}
+
+// Function to stop automatic door status polling
+function stopDoorStatusPolling() {
+    if (doorStatusInterval) {
+        clearInterval(doorStatusInterval);
+        doorStatusInterval = null;
+        console.log('Door status polling stopped');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -114,6 +177,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update door status on page load
     updateDoorStatus();
+    
+    // Start automatic door status polling if refresh interval is set
+    const refreshInterval = document.getElementById('doorRefreshInterval');
+    if (refreshInterval && refreshInterval.value) {
+        const intervalSeconds = parseInt(refreshInterval.value);
+        if (intervalSeconds > 0) {
+            startDoorStatusPolling(intervalSeconds);
+        }
+    }
     
     // Add click handler to garage status box for manual refresh
     const garageStatus = document.getElementById('garageStatus');
