@@ -26,7 +26,7 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 - 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
 - ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
 - 📊 **Output Display**: View script output and errors in real-time
-- 🔄 **Automatic Door Status Refresh**: Configurable polling to keep door status up-to-date ⭐ NEW
+- 🔄 **Real-time Door Status Updates**: Server-side scheduling with WebSocket push notifications ⭐ NEW
 - 🔒 **Environment-based Configuration**: Secure configuration using environment variables
 - 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
 - 🤖 **Automation HAT Support**: Control relays and read sensors on Raspberry Pi
