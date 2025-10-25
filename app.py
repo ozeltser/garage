@@ -254,9 +254,6 @@ def check_door_status_and_notify():
             if old_status is not None:
                 logger.info(f"Door status changed from {old_status} to {status}")
         
-        # Always update last status even if no change
-        last_door_status = status
-        
     except subprocess.TimeoutExpired:
         logger.error("Door status check timed out")
     except Exception as e:
