@@ -181,8 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start automatic door status polling if refresh interval is set
     const refreshInterval = document.getElementById('doorRefreshInterval');
     if (refreshInterval && refreshInterval.value) {
-        const intervalSeconds = parseInt(refreshInterval.value);
-        if (intervalSeconds > 0) {
+        const intervalSeconds = parseInt(refreshInterval.value, 10);
+        if (!isNaN(intervalSeconds) && intervalSeconds > 0) {
             startDoorStatusPolling(intervalSeconds);
         }
     }
