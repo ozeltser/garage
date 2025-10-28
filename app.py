@@ -31,7 +31,7 @@ else:
     # Default to "*" for development; set CORS_ALLOWED_ORIGINS in .env for production
     cors_allowed_origins = "*"
     logger.warning("CORS_ALLOWED_ORIGINS not set - using '*' (all origins). Set specific origins in production.")
-socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins)
+socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins, path='/socket.io/')
 
 # Initialize database manager
 try:
