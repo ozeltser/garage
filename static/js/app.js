@@ -63,7 +63,105 @@ function toggleTheme() {
 // Initialize theme before DOMContentLoaded to prevent flash
 initTheme();
 
+// Global variable to track the current door status and WebSocket connection
+let currentDoorStatus = null;
+let socket = null;
+
 // Function to update door status display
+function updateDoorStatusDisplay(status, previousStatus = null) {
+    const statusIndicator = document.querySelector('.status-indicator');
+    const statusIcon = document.querySelector('.status-icon');
+    const statusText = document.querySelector('.status-text');
+    
+    if (statusIndicator && statusIcon && statusText) {
+        // Remove existing status classes
+        statusIndicator.classList.remove('closed', 'open');
+        
+        // Update based on door status
+        if (status === 'closed') {
+            statusIndicator.classList.add('closed');
+            statusIcon.textContent = '🏠';
+            statusText.textContent = 'CLOSED';
+        } else if (status === 'open') {
+            statusIndicator.classList.add('open');
+            statusIcon.textContent = '🚪';
+            statusText.textContent = 'OPEN';
+        } else {
+            // Unknown status
+            statusIndicator.classList.add('closed');
+            statusIcon.textContent = '❓';
+            statusText.textContent = 'UNKNOWN';
+        }
+        
+        // Check if status changed and trigger event
+        if (previousStatus !== null && previousStatus !== status) {
+            onDoorStatusChanged(previousStatus, status);
+        }
+        
+        // Update current status
+        currentDoorStatus = status;
+    }
+}
+
+// Function to handle door status changes
+// This provides extensibility for future actions when door status changes
+function onDoorStatusChanged(oldStatus, newStatus) {
+    // Future actions can be added here, such as:
+    // - Sending notifications
+    // - Logging to a server
+    // - Triggering other UI updates
+    // - Playing sounds
+    // etc.
+    
+    // Dispatch custom event for other parts of the application
+    const event = new CustomEvent('doorStatusChanged', {
+        detail: {
+            oldStatus: oldStatus,
+            newStatus: newStatus,
+            timestamp: new Date()
+        }
+    });
+    document.dispatchEvent(event);
+}
+
+// Initialize WebSocket connection
+function initializeWebSocket() {
+    // Connect to the WebSocket server
+    socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: Infinity
+    });
+    
+    socket.on('connect', function() {
+        // Request current status when connected
+        socket.emit('request_status');
+    });
+    
+    socket.on('door_status_update', function(data) {
+        const newStatus = data.status;
+        const oldStatus = data.oldStatus || currentDoorStatus;
+        
+        updateDoorStatusDisplay(newStatus, oldStatus);
+    });
+    
+    socket.on('disconnect', function() {
+        // Handle disconnection if needed
+    });
+    
+    socket.on('connect_error', function(error) {
+        console.error('WebSocket connection error:', error);
+        // Fallback to HTTP polling if WebSocket fails persistently
+        // The socket.io client will automatically attempt to reconnect
+    });
+    
+    socket.on('error', function(error) {
+        console.error('WebSocket error:', error);
+    });
+}
+
+// Legacy function for backward compatibility - now fetches status via HTTP
 function updateDoorStatus() {
     fetch('/door_status', {
         method: 'GET',
@@ -74,30 +172,7 @@ function updateDoorStatus() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const statusIndicator = document.querySelector('.status-indicator');
-            const statusIcon = document.querySelector('.status-icon');
-            const statusText = document.querySelector('.status-text');
-            
-            if (statusIndicator && statusIcon && statusText) {
-                // Remove existing status classes
-                statusIndicator.classList.remove('closed', 'open');
-                
-                // Update based on door status
-                if (data.status === 'closed') {
-                    statusIndicator.classList.add('closed');
-                    statusIcon.textContent = '🏠';
-                    statusText.textContent = 'CLOSED';
-                } else if (data.status === 'open') {
-                    statusIndicator.classList.add('open');
-                    statusIcon.textContent = '🚪';
-                    statusText.textContent = 'OPEN';
-                } else {
-                    // Unknown status
-                    statusIndicator.classList.add('closed');
-                    statusIcon.textContent = '❓';
-                    statusText.textContent = 'UNKNOWN';
-                }
-            }
+            updateDoorStatusDisplay(data.status, currentDoorStatus);
         }
     })
     .catch(error => {
@@ -112,8 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
         themeToggle.addEventListener('click', toggleTheme);
     }
     
-    // Update door status on page load
-    updateDoorStatus();
+    // Initialize WebSocket connection for real-time door status updates
+    initializeWebSocket();
     
     // Add click handler to garage status box for manual refresh
     const garageStatus = document.getElementById('garageStatus');

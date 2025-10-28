@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_socketio import SocketIO, emit
 from functools import wraps
 import subprocess
 import os
@@ -7,6 +8,9 @@ import logging
 from dotenv import load_dotenv
 from database import DatabaseManager
 from user_roles import UserRole
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import atexit
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,6 +21,17 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-pr
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize SocketIO with configurable CORS
+# Read allowed origins from environment variable (comma-separated)
+cors_allowed_origins_env = os.getenv('CORS_ALLOWED_ORIGINS')
+if cors_allowed_origins_env:
+    cors_allowed_origins = [origin.strip() for origin in cors_allowed_origins_env.split(',')]
+else:
+    # Default to "*" for development; set CORS_ALLOWED_ORIGINS in .env for production
+    cors_allowed_origins = "*"
+    logger.warning("CORS_ALLOWED_ORIGINS not set - using '*' (all origins). Set specific origins in production.")
+socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins)
 
 # Initialize database manager
 try:
@@ -208,6 +223,108 @@ def door_status():
             'error': str(e)
         })
 
+# Global variable to track last known door status
+last_door_status = None
+
+def check_door_status_and_notify():
+    """Check door status and notify connected clients via WebSocket if it changed."""
+    global last_door_status
+    
+    try:
+        # Run the doorStatus.py script to get current door status
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(script_dir, 'doorStatus.py')
+        result = subprocess.run(['python', script_path],
+                              capture_output=True, text=True, timeout=10)
+        
+        # Parse the output to determine door status
+        output = result.stdout.strip()
+        
+        if 'Door Closed' in output:
+            status = 'closed'
+        elif 'Door Opened' in output:
+            status = 'open'
+        else:
+            status = 'unknown'
+        
+        # Check if status changed
+        if last_door_status != status:
+            old_status = last_door_status
+            last_door_status = status
+            
+            # Emit the status change to all connected clients
+            socketio.emit('door_status_update', {
+                'status': status,
+                'oldStatus': old_status,
+                'timestamp': None  # Will be set on client side
+            }, namespace='/')
+            
+            if old_status is not None:
+                logger.info(f"Door status changed from {old_status} to {status}")
+        
+    except subprocess.TimeoutExpired:
+        logger.error("Door status check timed out")
+    except Exception as e:
+        logger.error(f"Error checking door status in scheduler: {str(e)}")
+
+# Scheduler instance (initialized later to avoid duplicate instances with Flask reloader)
+scheduler = None
+
+def initialize_scheduler():
+    """Initialize and start the scheduler. Only runs once per process."""
+    global scheduler
+    
+    # Prevent duplicate initialization
+    if scheduler is not None:
+        logger.warning("Scheduler already initialized, skipping duplicate initialization")
+        return
+    
+    scheduler = BackgroundScheduler()
+    refresh_interval = int(os.getenv('DOOR_STATUS_REFRESH_INTERVAL', '10'))
+    scheduler.add_job(
+        func=check_door_status_and_notify,
+        trigger=IntervalTrigger(seconds=refresh_interval),
+        id='door_status_check',
+        name='Check door status and notify clients',
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info(f"Door status scheduler started with {refresh_interval} second interval")
+    
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown() if scheduler else None)
+
+# SocketIO event handlers
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection - send current door status and initialize scheduler."""
+    # Initialize scheduler on first connection (ensures it only runs once per process)
+    initialize_scheduler()
+    
+    logger.info(f"Client connected")
+    # Send current status to the newly connected client
+    if last_door_status is not None:
+        emit('door_status_update', {
+            'status': last_door_status,
+            'oldStatus': None,
+            'timestamp': None
+        })
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection."""
+    logger.info(f"Client disconnected")
+
+@socketio.on('request_status')
+def handle_request_status():
+    """Handle explicit status request from client."""
+    if last_door_status is not None:
+        emit('door_status_update', {
+            'status': last_door_status,
+            'oldStatus': None,
+            'timestamp': None
+        })
+
 @app.route('/admin')
 @login_required
 @admin_required
@@ -289,4 +406,9 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     logger.info(f"Starting Garage Web App on {host}:{port} (debug={debug})")
-    app.run(debug=debug, host=host, port=port)
+    
+    # Only allow unsafe werkzeug in debug/development mode
+    if debug:
+        socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
+    else:
+        socketio.run(app, debug=debug, host=host, port=port)
