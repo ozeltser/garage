@@ -18,6 +18,10 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Initialize SocketIO with configurable CORS
 # Read allowed origins from environment variable (comma-separated)
 cors_allowed_origins_env = os.getenv('CORS_ALLOWED_ORIGINS')
@@ -28,10 +32,6 @@ else:
     cors_allowed_origins = "*"
     logger.warning("CORS_ALLOWED_ORIGINS not set - using '*' (all origins). Set specific origins in production.")
 socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins)
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Initialize database manager
 try:
