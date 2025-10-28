@@ -127,7 +127,12 @@ function onDoorStatusChanged(oldStatus, newStatus) {
 // Initialize WebSocket connection
 function initializeWebSocket() {
     // Connect to the WebSocket server
-    socket = io();
+    socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: Infinity
+    });
     
     socket.on('connect', function() {
         // Request current status when connected
@@ -143,6 +148,16 @@ function initializeWebSocket() {
     
     socket.on('disconnect', function() {
         // Handle disconnection if needed
+    });
+    
+    socket.on('connect_error', function(error) {
+        console.error('WebSocket connection error:', error);
+        // Fallback to HTTP polling if WebSocket fails persistently
+        // The socket.io client will automatically attempt to reconnect
+    });
+    
+    socket.on('error', function(error) {
+        console.error('WebSocket error:', error);
     });
 }
 

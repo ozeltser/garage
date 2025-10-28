@@ -18,8 +18,16 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 
-# Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Initialize SocketIO with configurable CORS
+# Read allowed origins from environment variable (comma-separated)
+cors_allowed_origins_env = os.getenv('CORS_ALLOWED_ORIGINS')
+if cors_allowed_origins_env:
+    cors_allowed_origins = [origin.strip() for origin in cors_allowed_origins_env.split(',')]
+else:
+    # Default to "*" for development; set CORS_ALLOWED_ORIGINS in .env for production
+    cors_allowed_origins = "*"
+    logger.warning("CORS_ALLOWED_ORIGINS not set - using '*' (all origins). Set specific origins in production.")
+socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -259,28 +267,40 @@ def check_door_status_and_notify():
     except Exception as e:
         logger.error(f"Error checking door status in scheduler: {str(e)}")
 
-# Initialize the scheduler
-scheduler = BackgroundScheduler()
-refresh_interval = int(os.getenv('DOOR_STATUS_REFRESH_INTERVAL', '10'))
-scheduler.add_job(
-    func=check_door_status_and_notify,
-    trigger=IntervalTrigger(seconds=refresh_interval),
-    id='door_status_check',
-    name='Check door status and notify clients',
-    replace_existing=True
-)
+# Scheduler instance (initialized later to avoid duplicate instances with Flask reloader)
+scheduler = None
 
-# Start the scheduler
-scheduler.start()
-logger.info(f"Door status scheduler started with {refresh_interval} second interval")
-
-# Shut down the scheduler when exiting the app
-atexit.register(lambda: scheduler.shutdown())
+def initialize_scheduler():
+    """Initialize and start the scheduler. Only runs once per process."""
+    global scheduler
+    
+    # Prevent duplicate initialization
+    if scheduler is not None:
+        logger.warning("Scheduler already initialized, skipping duplicate initialization")
+        return
+    
+    scheduler = BackgroundScheduler()
+    refresh_interval = int(os.getenv('DOOR_STATUS_REFRESH_INTERVAL', '10'))
+    scheduler.add_job(
+        func=check_door_status_and_notify,
+        trigger=IntervalTrigger(seconds=refresh_interval),
+        id='door_status_check',
+        name='Check door status and notify clients',
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info(f"Door status scheduler started with {refresh_interval} second interval")
+    
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown() if scheduler else None)
 
 # SocketIO event handlers
 @socketio.on('connect')
 def handle_connect():
-    """Handle client connection - send current door status."""
+    """Handle client connection - send current door status and initialize scheduler."""
+    # Initialize scheduler on first connection (ensures it only runs once per process)
+    initialize_scheduler()
+    
     logger.info(f"Client connected")
     # Send current status to the newly connected client
     if last_door_status is not None:
@@ -386,4 +406,9 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     logger.info(f"Starting Garage Web App on {host}:{port} (debug={debug})")
-    socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
+    
+    # Only allow unsafe werkzeug in debug/development mode
+    if debug:
+        socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
+    else:
+        socketio.run(app, debug=debug, host=host, port=port)
