@@ -68,6 +68,32 @@ sleep 5
 curl http://127.0.0.1:5000/login
 ```
 
+### WebSocket/Socket.IO Connection Issues
+```bash
+# 1. Check if real-time updates are working
+# Open browser console and look for WebSocket errors
+
+# 2. Verify nginx configuration has WebSocket support
+sudo nginx -t
+sudo grep -A 5 "WebSocket" /etc/nginx/sites-available/garage
+
+# 3. Check that Socket.IO is configured with correct path
+# Should see: socketio = SocketIO(app, ..., path='/socket.io/')
+grep "path=" /opt/garage/app/app.py
+
+# 4. Restart services to apply configuration
+sudo systemctl restart garage.service nginx
+
+# 5. Test WebSocket connection
+# Browser console should show: "Client connected" in network tab
+
+# Common causes:
+# - nginx missing WebSocket upgrade headers
+# - Socket.IO path not configured
+# - CORS issues (check CORS_ALLOWED_ORIGINS in .env)
+# - Firewall blocking WebSocket connections
+```
+
 ## Database Issues
 
 ### Can't Connect to Database

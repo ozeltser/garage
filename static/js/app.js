@@ -128,6 +128,7 @@ function onDoorStatusChanged(oldStatus, newStatus) {
 function initializeWebSocket() {
     // Connect to the WebSocket server
     socket = io({
+        path: '/socket.io/',
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
