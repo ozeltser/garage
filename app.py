@@ -408,7 +408,4 @@ if __name__ == '__main__':
     logger.info(f"Starting Garage Web App on {host}:{port} (debug={debug})")
     
     # Only allow unsafe werkzeug in debug/development mode
-    if debug:
-        socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
-    else:
-        socketio.run(app, debug=debug, host=host, port=port)
+    socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
