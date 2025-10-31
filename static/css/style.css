@@ -23,6 +23,13 @@
     --status-open-border: #dc3545;
     --status-open-bg: #f8d7da;
     --status-open-text: #dc3545;
+    /* Button colors for light mode */
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover-bg: #0b5ed7;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover-bg: #e0a800;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover-bg: #bb2d3b;
 }
 
 [data-theme="dark"] {
@@ -48,6 +55,13 @@
     --status-open-border: #dc3545;
     --status-open-bg: rgba(220, 53, 69, 0.2);
     --status-open-text: #ff6b6b;
+    /* Button colors for dark mode */
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover-bg: #0b5ed7;
+    --btn-warning-bg: #f0ad4e;
+    --btn-warning-hover-bg: #ec971f;
+    --btn-danger-bg: #d9534f;
+    --btn-danger-hover-bg: #c9302c;
 }
 
 body {
@@ -307,4 +321,96 @@ body {
     .status-text {
         font-size: 1.2rem;
     }
+}
+
+/* Table styling for dark mode */
+[data-theme="dark"] .table {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-bottom-color: var(--card-border);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] thead {
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] th {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] td {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+/* Badge styling for dark mode */
+[data-theme="dark"] .badge {
+    color: #fff;
+}
+
+/* Button styling for dark mode */
+[data-theme="dark"] .btn-warning {
+    background-color: var(--btn-warning-bg);
+    border-color: var(--btn-warning-bg);
+    color: #000;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background-color: var(--btn-warning-hover-bg);
+    border-color: var(--btn-warning-hover-bg);
+    color: #000;
+}
+
+[data-theme="dark"] .btn-danger {
+    background-color: var(--btn-danger-bg);
+    border-color: var(--btn-danger-bg);
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background-color: var(--btn-danger-hover-bg);
+    border-color: var(--btn-danger-hover-bg);
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-primary {
+    background-color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: var(--btn-primary-hover-bg);
+    border-color: var(--btn-primary-hover-bg);
+    color: #fff;
+}
+
+/* Card title styling for dark mode */
+[data-theme="dark"] .card-title {
+    color: var(--text-color);
+}
+
+/* Form label styling for dark mode */
+[data-theme="dark"] .form-label {
+    color: var(--text-color);
+}
+
+/* Small text styling for dark mode */
+[data-theme="dark"] small {
+    color: var(--text-muted);
 }
