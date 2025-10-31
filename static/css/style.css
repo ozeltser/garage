@@ -308,3 +308,85 @@ body {
         font-size: 1.2rem;
     }
 }
+
+/* Table styling for dark mode */
+[data-theme="dark"] .table {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-bottom-color: var(--card-border);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.075);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] thead {
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] th {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+[data-theme="dark"] td {
+    color: var(--text-color);
+    border-color: var(--card-border);
+}
+
+/* Badge styling for dark mode */
+[data-theme="dark"] .badge {
+    color: #fff;
+}
+
+/* Button styling for dark mode */
+[data-theme="dark"] .btn-warning {
+    background-color: #f0ad4e;
+    border-color: #f0ad4e;
+    color: #000;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background-color: #ec971f;
+    border-color: #ec971f;
+    color: #000;
+}
+
+[data-theme="dark"] .btn-danger {
+    background-color: #d9534f;
+    border-color: #d9534f;
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background-color: #c9302c;
+    border-color: #c9302c;
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0b5ed7;
+    color: #fff;
+}
+
+/* Card title styling for dark mode */
+[data-theme="dark"] .card-title {
+    color: var(--text-color);
+}
