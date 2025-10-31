@@ -3,7 +3,6 @@
 Integration test to demonstrate the SMS notification functionality.
 This script simulates door status changes and shows how notifications would be sent.
 """
-import os
 import sys
 from dotenv import load_dotenv
 from notification_service import NotificationService

@@ -5,7 +5,7 @@ Test script for SMS notification functionality.
 import sys
 import os
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 # Add the parent directory to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

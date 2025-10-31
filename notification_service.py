@@ -3,7 +3,6 @@ Notification service for sending SMS alerts via Twilio.
 """
 import os
 import logging
-from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +29,11 @@ class NotificationService:
             except ImportError:
                 logger.warning("Twilio library not installed. SMS notifications disabled.")
                 self.enabled = False
+                self.client = None
             except Exception as e:
                 logger.error(f"Failed to initialize Twilio client: {str(e)}")
                 self.enabled = False
+                self.client = None
         else:
             logger.info("SMS notifications disabled (missing configuration)")
             self.client = None
