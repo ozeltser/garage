@@ -81,6 +81,7 @@ class DatabaseManager:
                             last_name VARCHAR(255),
                             email VARCHAR(255),
                             phone VARCHAR(50),
+                            sms_notifications_enabled BOOLEAN DEFAULT FALSE,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             is_active BOOLEAN DEFAULT TRUE
@@ -113,7 +114,7 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, is_active FROM users WHERE username = %s AND is_active = TRUE",
+                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active FROM users WHERE username = %s AND is_active = TRUE",
                         (username,)
                     )
                     return cursor.fetchone()
@@ -172,7 +173,7 @@ class DatabaseManager:
             return False
     
     def update_user_profile(self, username: str, first_name: str = None, last_name: str = None, 
-                           email: str = None, phone: str = None) -> bool:
+                           email: str = None, phone: str = None, sms_notifications_enabled: bool = False) -> bool:
         """Update user profile information."""
         try:
             with self.get_connection() as connection:
@@ -183,9 +184,10 @@ class DatabaseManager:
                            last_name = %s, 
                            email = %s, 
                            phone = %s, 
+                           sms_notifications_enabled = %s,
                            updated_at = CURRENT_TIMESTAMP 
                            WHERE username = %s AND is_active = TRUE""",
-                        (first_name, last_name, email, phone, username)
+                        (first_name, last_name, email, phone, sms_notifications_enabled, username)
                     )
                     if cursor.rowcount > 0:
                         logger.info(f"Profile updated for user '{username}'")
@@ -222,7 +224,7 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, role, first_name, last_name, email, phone, created_at FROM users WHERE is_active = TRUE ORDER BY created_at DESC"
+                        "SELECT id, username, role, first_name, last_name, email, phone, sms_notifications_enabled, created_at FROM users WHERE is_active = TRUE ORDER BY created_at DESC"
                     )
                     return cursor.fetchall()
         except Exception as e:

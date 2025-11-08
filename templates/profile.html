@@ -56,6 +56,19 @@
                         <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
                     </div>
                     
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sms_notifications_enabled" name="sms_notifications_enabled" {% if user.sms_notifications_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="sms_notifications_enabled">
+                                Notification Opt-In
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Enable this option to receive SMS notifications about door status changes. 
+                            Standard carrier charges may apply. You can disable these notifications at any time by unchecking this box.
+                        </small>
+                    </div>
+                    
                     <hr class="my-4">
                     
                     <h5 class="mb-3">Change Password</h5>
