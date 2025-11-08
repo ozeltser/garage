@@ -400,6 +400,11 @@ def admin_change_password(username):
     
     return render_template('change_password.html', user=user_data)
 
+@app.route('/privacy-policy')
+def privacy_policy():
+    """Display privacy policy page."""
+    return render_template('privacy_policy.html')
+
 if __name__ == '__main__':
     host = os.getenv('APP_HOST', '0.0.0.0')
     port = int(os.getenv('APP_PORT', 5000))
