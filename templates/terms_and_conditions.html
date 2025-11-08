@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Terms and Conditions - Garage App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                {% if current_user.is_authenticated %}
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme (auto/light/dark)">
+                    ◐
+                </button>
+                {% endif %}
+                <span class="navbar-brand">Terms and Conditions</span>
+                {% if current_user.is_authenticated %}
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('home') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+                {% else %}
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-10 col-lg-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-4">Terms and Conditions for home.azuriki.com</h1>
+                
+                <p><strong>Last Updated: November 7, 2025</strong></p>
+                
+                <p>Welcome to home.azuriki.com (the "Service"). These Terms and Conditions ("Terms") govern your access to and use of the Service provided by azuriki.com ("us", "we", or "our").</p>
+                
+                <p>By logging into or using the Service, you ("you" or "User") acknowledge that you have read, understood, and agree to be bound by these Terms.</p>
+                
+                <h3 class="mt-4">1. Account Access and Security</h3>
+                
+                <p><strong>Invitation-Only Access:</strong> This is a closed Service. Access is strictly by invitation only.</p>
+                
+                <p><strong>Account Creation:</strong> User accounts are not available through public registration. All accounts are created, provisioned, and provided directly by the administrator (azuriki.com) of the Service. We reserve the right to grant or deny access to any individual at our sole discretion.</p>
+                
+                <p><strong>Account Responsibility:</strong> You are responsible for maintaining the confidentiality of your account login credentials (username and password). You are fully responsible for all activities that occur under your account.</p>
+                
+                <p><strong>Unauthorized Use:</strong> You agree to notify us immediately of any unauthorized use of your account or any other breach of security. We will not be liable for any loss or damage arising from your failure to comply with this section.</p>
+                
+                <h3 class="mt-4">2. Permitted Use and Scope of Service</h3>
+                
+                <p>This Service is provided for a single, limited, and specific purpose.</p>
+                
+                <p><strong>Intended Purpose:</strong> The Service is provided to you for the sole and exclusive purpose of remotely operating a designated home automation system.</p>
+                
+                <p><strong>Specific Function:</strong> Your access rights are strictly limited to operating the designated door access system (e.g., locking, unlocking) and nothing else.</p>
+                
+                <p><strong>No Other Use:</strong> Any use of the Service, your account, or the system for any purpose other than the intended use described above is a direct violation of these Terms and is strictly prohibited.</p>
+                
+                <h3 class="mt-4">3. Prohibited Conduct</h3>
+                
+                <p>You agree that you will not, under any circumstances:</p>
+                <ul>
+                    <li>Attempt to use the Service for any purpose other than its intended use (door operation).</li>
+                    <li>Share, sell, transfer, or allow any other person to use your account credentials.</li>
+                    <li>Attempt to access any other part of the Service, server, or network connected to the Service that you are not explicitly authorized to access.</li>
+                    <li>Reverse engineer, decompile, disassemble, or otherwise attempt to discover the source code or underlying architecture of the Service.</li>
+                    <li>Use the Service in any manner that could damage, disable, overburden, or impair the Service or interfere with any other party's use of the Service.</li>
+                </ul>
+                
+                <h3 class="mt-4">4. Termination of Access</h3>
+                
+                <p>We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason whatsoever, including, without limitation, if you breach these Terms.</p>
+                
+                <p>Upon termination, your right to use the Service will immediately cease. All provisions of these Terms which by their nature should survive termination shall survive, including, without limitation, warranty disclaimers and limitations of liability.</p>
+                
+                <h3 class="mt-4">5. Disclaimer of Warranties</h3>
+                
+                <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis. We make no warranties, express or implied, that the Service will be uninterrupted, secure, error-free, or that the door mechanism will operate correctly, safely, or without malfunction at all times. You use the Service at your own sole risk.</p>
+                
+                <h3 class="mt-4">6. Limitation of Liability</h3>
+                
+                <p>To the fullest extent permitted by applicable law, in no event shall azuriki.com be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:</p>
+                <ul>
+                    <li>Any failure, malfunction, or error of the Service or the door mechanism.</li>
+                    <li>Any unauthorized access to or use of our servers and/or your account.</li>
+                    <li>Any property damage, theft, personal injury, or loss resulting from the use or inability to use the Service, whether or not the door operated as intended.</li>
+                </ul>
+                
+                <p>You acknowledge the inherent risks of using a remote system to control physical access to a property and agree to assume all responsibility and liability for any such outcomes.</p>
+                
+                <h3 class="mt-4">7. Indemnification</h3>
+                
+                <p>You agree to defend, indemnify, and hold harmless azuriki.com from and against any and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including but not limited to attorney's fees) arising from: (i) your use of and access to the Service; or (ii) your violation of any term of these Terms.</p>
+                
+                <h3 class="mt-4">8. Governing Law</h3>
+                
+                <p>These Terms shall be governed and construed in accordance with the laws of the State of New Jersey, United States, without regard to its conflict of law provisions.</p>
+                
+                <h3 class="mt-4">9. Changes to Terms</h3>
+                
+                <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide notice of any changes by sending an email to home@azuriki.com. Your continued use of the Service after any such changes constitutes your acceptance of the new Terms.</p>
+                
+                <h3 class="mt-4">10. Contact Us</h3>
+                
+                <p>If you have any questions about these Terms, please contact us at:<br>
+                <a href="mailto:home@azuriki.com">home@azuriki.com</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
