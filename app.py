@@ -117,6 +117,7 @@ def profile():
             last_name = request.form.get('last_name', '').strip()
             email = request.form.get('email', '').strip()
             phone = request.form.get('phone', '').strip()
+            sms_notifications_enabled = request.form.get('sms_notifications_enabled') == 'on'
             
             # Update profile
             if db_manager.update_user_profile(
@@ -124,7 +125,8 @@ def profile():
                 first_name if first_name else None,
                 last_name if last_name else None,
                 email if email else None,
-                phone if phone else None
+                phone if phone else None,
+                sms_notifications_enabled
             ):
                 flash('Profile updated successfully', 'success')
                 
