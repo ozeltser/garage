@@ -405,6 +405,11 @@ def privacy_policy():
     """Display privacy policy page."""
     return render_template('privacy_policy.html')
 
+@app.route('/terms-and-conditions')
+def terms_and_conditions():
+    """Display terms and conditions page."""
+    return render_template('terms_and_conditions.html')
+
 if __name__ == '__main__':
     host = os.getenv('APP_HOST', '0.0.0.0')
     port = int(os.getenv('APP_PORT', 5000))
