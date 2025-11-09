@@ -50,6 +50,7 @@ def test_socketio_parameters():
     """Test Socket.IO initialization parameters."""
     print("\nTesting Socket.IO parameters...")
     try:
+        import os
         from flask import Flask
         from flask_socketio import SocketIO
         
@@ -57,10 +58,11 @@ def test_socketio_parameters():
         test_app = Flask(__name__)
         test_app.config['SECRET_KEY'] = 'test-secret-key'
         
-        # Test that SocketIO can be initialized with path parameter
+        # Test that SocketIO can be initialized with path parameter and CORS origins
+        test_cors_origins = ["http://localhost:5000", "http://127.0.0.1:5000"]
         test_socketio = SocketIO(
             test_app,
-            cors_allowed_origins="*",
+            cors_allowed_origins=test_cors_origins,
             path='/socket.io/'
         )
         
@@ -143,6 +145,64 @@ def test_client_socketio_config():
         traceback.print_exc()
         return False
 
+def test_cors_configuration():
+    """Test that CORS is configured securely by default."""
+    print("\nTesting CORS security configuration...")
+    try:
+        import os
+        import unittest.mock as mock
+        
+        # Test 1: When CORS_ALLOWED_ORIGINS is not set, should use localhost
+        print("  Testing default CORS configuration (no env var)...")
+        with mock.patch.dict(os.environ, {}, clear=False):
+            # Remove CORS_ALLOWED_ORIGINS if it exists
+            os.environ.pop('CORS_ALLOWED_ORIGINS', None)
+            
+            # Import app module fresh to test default behavior
+            import importlib
+            import sys
+            
+            # Remove app from cache to force fresh import
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            with mock.patch('database.DatabaseManager') as mock_db:
+                mock_db.return_value = mock.MagicMock()
+                
+                # Import app (this will trigger CORS initialization)
+                import app as app_module
+                
+                # Check that cors_allowed_origins is localhost, not "*"
+                cors_config = app_module.cors_allowed_origins
+                assert cors_config != "*", "Default CORS should not be '*' (all origins)"
+                assert isinstance(cors_config, list), "CORS origins should be a list when not set to '*'"
+                print(f"  ✓ Default CORS is secure (not '*'): {cors_config}")
+        
+        # Test 2: When CORS_ALLOWED_ORIGINS is set, should use that value
+        print("  Testing custom CORS configuration (with env var)...")
+        test_origins = "https://example.com,https://www.example.com"
+        with mock.patch.dict(os.environ, {'CORS_ALLOWED_ORIGINS': test_origins}):
+            # Remove app from cache
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            with mock.patch('database.DatabaseManager') as mock_db:
+                mock_db.return_value = mock.MagicMock()
+                
+                import app as app_module
+                
+                cors_config = app_module.cors_allowed_origins
+                expected = [o.strip() for o in test_origins.split(',')]
+                assert cors_config == expected, f"Expected {expected}, got {cors_config}"
+                print(f"  ✓ Custom CORS configuration works: {cors_config}")
+        
+        return True
+    except Exception as e:
+        print(f"✗ CORS configuration test failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 def run_all_tests():
     """Run all tests and report results."""
     print("=" * 60)
@@ -154,6 +214,7 @@ def run_all_tests():
         test_socketio_parameters,
         test_nginx_config_syntax,
         test_client_socketio_config,
+        test_cors_configuration,
     ]
     
     results = []

@@ -27,10 +27,14 @@ logger = logging.getLogger(__name__)
 cors_allowed_origins_env = os.getenv('CORS_ALLOWED_ORIGINS')
 if cors_allowed_origins_env:
     cors_allowed_origins = [origin.strip() for origin in cors_allowed_origins_env.split(',')]
+    logger.info(f"CORS configured with allowed origins: {cors_allowed_origins}")
 else:
-    # Default to "*" for development; set CORS_ALLOWED_ORIGINS in .env for production
-    cors_allowed_origins = "*"
-    logger.warning("CORS_ALLOWED_ORIGINS not set - using '*' (all origins). Set specific origins in production.")
+    # Default to localhost for security; set CORS_ALLOWED_ORIGINS in .env for production
+    cors_allowed_origins = ["http://localhost:5000", "http://127.0.0.1:5000"]
+    logger.warning(
+        "CORS_ALLOWED_ORIGINS not set - using localhost only. "
+        "Set CORS_ALLOWED_ORIGINS environment variable to allow other origins."
+    )
 socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins, path='/socket.io/')
 
 # Initialize database manager
