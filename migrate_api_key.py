@@ -78,7 +78,7 @@ def main():
         try:
             connection.rollback()
         except Exception:
-            pass  # Rollback failed, but we're already in an error state
+            pass  # Rollback failed, but don't mask the original error that caused the exception
         print(f"\n❌ An error occurred during migration: {e}")
         sys.exit(1)
     finally:
