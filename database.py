@@ -1,6 +1,7 @@
 """
 Database module for secure MySQL connectivity and user management.
 """
+import hashlib
 import os
 import pymysql
 import logging
@@ -116,8 +117,8 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, role, is_active FROM users WHERE api_key = %s AND is_active = TRUE",
-                        (api_key,)
+                        "SELECT id, username, role, is_active FROM users WHERE api_key_hash = %s AND is_active = TRUE",
+                        (hashlib.sha256(api_key.encode()).hexdigest(),)
                     )
                     return cursor.fetchone()
         except Exception as e:
@@ -128,11 +129,12 @@ class DatabaseManager:
         """Generate and save a new API key for a user."""
         try:
             api_key = secrets.token_hex(32)
+            api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "UPDATE users SET api_key = %s WHERE username = %s AND is_active = TRUE",
-                        (api_key, username)
+                        "UPDATE users SET api_key_hash = %s WHERE username = %s AND is_active = TRUE",
+                        (api_key_hash, username)
                     )
                     if cursor.rowcount > 0:
                         logger.info(f"Generated new API key for user '{username}'")
@@ -150,7 +152,7 @@ class DatabaseManager:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active, api_key FROM users WHERE username = %s AND is_active = TRUE",
+                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active, api_key_hash FROM users WHERE username = %s AND is_active = TRUE",
                         (username,)
                     )
                     return cursor.fetchone()

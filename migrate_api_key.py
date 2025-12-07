@@ -69,7 +69,7 @@ def main():
         with connection.cursor() as cursor:
             print("\nChecking current schema...")
             
-            if check_and_add_column(cursor, 'users', 'api_key', 'VARCHAR(255) UNIQUE AFTER is_active'):
+            if check_and_add_column(cursor, 'users', 'api_key_hash', 'VARCHAR(255) UNIQUE AFTER is_active'):
                 added_columns += 1
 
     except Exception as e:

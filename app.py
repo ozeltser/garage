@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, g
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from functools import wraps
@@ -167,14 +167,14 @@ def api_key_required(f):
     def decorated_function(*args, **kwargs):
         api_key = request.headers.get('X-API-Key')
         if not api_key:
-            return jsonify({'error': 'API key is missing'}), 401
+            return jsonify({'error': 'Invalid API key'}), 401
         
         user_data = db_manager.get_user_by_api_key(api_key)
         if not user_data:
             return jsonify({'error': 'Invalid API key'}), 401
         
         # You can optionally load the user into the context if needed
-        # g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
+        g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
         
         return f(*args, **kwargs)
     return decorated_function
