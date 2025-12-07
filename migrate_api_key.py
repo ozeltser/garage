@@ -75,7 +75,10 @@ def main():
         connection.commit()
 
     except Exception as e:
-        connection.rollback()
+        try:
+            connection.rollback()
+        except Exception:
+            pass  # Rollback failed, but we're already in an error state
         print(f"\n❌ An error occurred during migration: {e}")
         sys.exit(1)
     finally:
