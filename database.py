@@ -87,7 +87,7 @@ class DatabaseManager:
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             is_active BOOLEAN DEFAULT TRUE,
-                            api_key VARCHAR(255) UNIQUE
+                            api_key_hash VARCHAR(255) UNIQUE
                         )
                     """)
                     
