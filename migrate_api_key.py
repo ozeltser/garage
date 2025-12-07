@@ -71,8 +71,14 @@ def main():
             
             if check_and_add_column(cursor, 'users', 'api_key_hash', 'VARCHAR(255) UNIQUE AFTER is_active'):
                 added_columns += 1
+        
+        connection.commit()
 
     except Exception as e:
+        try:
+            connection.rollback()
+        except Exception:
+            pass  # Rollback failed, but don't mask the original error that caused the exception
         print(f"\n❌ An error occurred during migration: {e}")
         sys.exit(1)
     finally:
