@@ -286,6 +286,7 @@ All sensitive configuration is managed through environment variables in `.env`:
 - `GET /profile`: User profile page (requires authentication)
 - `POST /profile`: Update user profile and password (requires authentication)
 - `POST /run_script`: Execute the Python script (requires authentication)
+- `GET /api/door_status`: Get door status via API (requires API key)
 
 ## Development
 

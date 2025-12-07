@@ -158,7 +158,50 @@ def profile():
     
     # GET request - display profile form
     user_data = db_manager.get_user_by_username(current_user.id)
-    return render_template('profile.html', user=user_data)
+    new_api_key = session.pop('new_api_key', None)
+    return render_template('profile.html', user=user_data, new_api_key=new_api_key)
+
+def api_key_required(f):
+    """Decorator to require a valid API key for a route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'error': 'API key is missing'}), 401
+        
+        user_data = db_manager.get_user_by_api_key(api_key)
+        if not user_data:
+            return jsonify({'error': 'Invalid API key'}), 401
+        
+        # You can optionally load the user into the context if needed
+        # g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/api/door_status', methods=['GET'])
+@api_key_required
+def api_door_status():
+    """API endpoint to get the current door status."""
+    return door_status()
+
+@app.route('/generate_api_key', methods=['POST'])
+@login_required
+def generate_api_key():
+    """Generate a new API key for the current user."""
+    try:
+        new_key = db_manager.generate_api_key(current_user.id)
+        if new_key:
+            flash('New API key generated successfully. Make sure to copy it now, as you will not be able to see it again.', 'success')
+            # Pass the key to the template to be displayed once.
+            session['new_api_key'] = new_key
+        else:
+            flash('Failed to generate API key.', 'error')
+    except Exception as e:
+        logger.error(f"API key generation error for user {current_user.id}: {str(e)}")
+        flash('An error occurred while generating the API key.', 'error')
+    
+    return redirect(url_for('profile'))
 
 @app.route('/run_script', methods=['POST'])
 @login_required
