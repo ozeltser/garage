@@ -183,7 +183,8 @@ def api_key_required(f):
 @api_key_required
 def api_door_status():
     """API endpoint to get the current door status."""
-    return door_status()
+    status_data = _get_door_status()
+    return jsonify(status_data)
 
 @app.route('/generate_api_key', methods=['POST'])
 @login_required
@@ -228,9 +229,8 @@ def run_script():
             'error': str(e)
         })
 
-@app.route('/door_status', methods=['GET'])
-@login_required
-def door_status():
+def _get_door_status():
+    """Check the door status by running the doorStatus.py script."""
     try:
         # Run the doorStatus.py script to get current door status
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -250,23 +250,30 @@ def door_status():
             # Default to unknown if we can't determine status
             status = 'unknown'
         
-        return jsonify({
+        return {
             'success': True,
             'status': status,
             'raw_output': output,
             'error': error_output if error_output else None
-        })
+        }
     except subprocess.TimeoutExpired:
-        return jsonify({
+        return {
             'success': False,
             'error': 'Door status check timed out'
-        })
+        }
     except Exception as e:
         logger.error(f"Error checking door status: {str(e)}")
-        return jsonify({
+        return {
             'success': False,
             'error': str(e)
-        })
+        }
+
+@app.route('/door_status', methods=['GET'])
+@login_required
+def door_status():
+    """Endpoint for the web UI to get the current door status."""
+    status_data = _get_door_status()
+    return jsonify(status_data)
 
 # Global variable to track last known door status
 last_door_status = None
