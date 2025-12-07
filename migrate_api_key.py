@@ -71,6 +71,8 @@ def main():
             
             if check_and_add_column(cursor, 'users', 'api_key_hash', 'VARCHAR(255) UNIQUE AFTER is_active'):
                 added_columns += 1
+        
+        connection.commit()
 
     except Exception as e:
         print(f"\n❌ An error occurred during migration: {e}")
