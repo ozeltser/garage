@@ -75,6 +75,7 @@ def main():
         connection.commit()
 
     except Exception as e:
+        connection.rollback()
         print(f"\n❌ An error occurred during migration: {e}")
         sys.exit(1)
     finally:
