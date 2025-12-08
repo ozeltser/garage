@@ -174,7 +174,7 @@ def api_key_required(f):
             return jsonify({'error': 'Invalid API key'}), 401
         
         # You can optionally load the user into the context if needed
-        g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
+        # g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
         
         return f(*args, **kwargs)
     return decorated_function
