@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, g
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from functools import wraps
@@ -158,7 +158,51 @@ def profile():
     
     # GET request - display profile form
     user_data = db_manager.get_user_by_username(current_user.id)
-    return render_template('profile.html', user=user_data)
+    new_api_key = session.pop('new_api_key', None)
+    return render_template('profile.html', user=user_data, new_api_key=new_api_key)
+
+def api_key_required(f):
+    """Decorator to require a valid API key for a route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'error': 'Invalid API key'}), 401
+        
+        user_data = db_manager.get_user_by_api_key(api_key)
+        if not user_data:
+            return jsonify({'error': 'Invalid API key'}), 401
+        
+        # You can optionally load the user into the context if needed
+        # g.current_user = User(user_data['username'], user_data['id'], user_data.get('role'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/api/door_status', methods=['GET'])
+@api_key_required
+def api_door_status():
+    """API endpoint to get the current door status."""
+    status_data = _get_door_status()
+    return jsonify(status_data)
+
+@app.route('/generate_api_key', methods=['POST'])
+@login_required
+def generate_api_key():
+    """Generate a new API key for the current user."""
+    try:
+        new_key = db_manager.generate_api_key(current_user.id)
+        if new_key:
+            flash('New API key generated successfully. Make sure to copy it now, as you will not be able to see it again.', 'success')
+            # Pass the key to the template to be displayed once.
+            session['new_api_key'] = new_key
+        else:
+            flash('Failed to generate API key.', 'error')
+    except Exception as e:
+        logger.error(f"API key generation error for user {current_user.id}: {str(e)}")
+        flash('An error occurred while generating the API key.', 'error')
+    
+    return redirect(url_for('profile'))
 
 @app.route('/run_script', methods=['POST'])
 @login_required
@@ -185,9 +229,8 @@ def run_script():
             'error': str(e)
         })
 
-@app.route('/door_status', methods=['GET'])
-@login_required
-def door_status():
+def _get_door_status():
+    """Check the door status by running the doorStatus.py script."""
     try:
         # Run the doorStatus.py script to get current door status
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -207,23 +250,30 @@ def door_status():
             # Default to unknown if we can't determine status
             status = 'unknown'
         
-        return jsonify({
+        return {
             'success': True,
             'status': status,
             'raw_output': output,
             'error': error_output if error_output else None
-        })
+        }
     except subprocess.TimeoutExpired:
-        return jsonify({
+        return {
             'success': False,
             'error': 'Door status check timed out'
-        })
+        }
     except Exception as e:
         logger.error(f"Error checking door status: {str(e)}")
-        return jsonify({
+        return {
             'success': False,
             'error': str(e)
-        })
+        }
+
+@app.route('/door_status', methods=['GET'])
+@login_required
+def door_status():
+    """Endpoint for the web UI to get the current door status."""
+    status_data = _get_door_status()
+    return jsonify(status_data)
 
 # Global variable to track last known door status
 last_door_status = None

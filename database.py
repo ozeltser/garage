@@ -1,12 +1,14 @@
 """
 Database module for secure MySQL connectivity and user management.
 """
+import hashlib
 import os
 import pymysql
 import logging
 from typing import Optional, Dict, Any
 from werkzeug.security import generate_password_hash, check_password_hash
 from user_roles import UserRole
+import secrets
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -84,7 +86,8 @@ class DatabaseManager:
                             sms_notifications_enabled BOOLEAN DEFAULT FALSE,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                            is_active BOOLEAN DEFAULT TRUE
+                            is_active BOOLEAN DEFAULT TRUE,
+                            api_key_hash VARCHAR(255) UNIQUE
                         )
                     """)
                     
@@ -107,14 +110,49 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Failed to setup database: {str(e)}")
             raise
-    
+
+    def get_user_by_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
+        """Retrieve user by API key from the database."""
+        try:
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT id, username, role, is_active FROM users WHERE api_key_hash = %s AND is_active = TRUE",
+                        (hashlib.sha256(api_key.encode()).hexdigest(),)
+                    )
+                    return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"Failed to retrieve user by API key: {str(e)}")
+            return None
+
+    def generate_api_key(self, username: str) -> Optional[str]:
+        """Generate and save a new API key for a user."""
+        try:
+            api_key = secrets.token_hex(32)
+            api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+            with self.get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE users SET api_key_hash = %s WHERE username = %s AND is_active = TRUE",
+                        (api_key_hash, username)
+                    )
+                    if cursor.rowcount > 0:
+                        logger.info(f"Generated new API key for user '{username}'")
+                        return api_key
+                    else:
+                        logger.warning(f"User '{username}' not found or inactive")
+                        return None
+        except Exception as e:
+            logger.error(f"Failed to generate API key for user {username}: {str(e)}")
+            return None
+
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         """Retrieve user by username from the database."""
         try:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active FROM users WHERE username = %s AND is_active = TRUE",
+                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active, api_key_hash FROM users WHERE username = %s AND is_active = TRUE",
                         (username,)
                     )
                     return cursor.fetchone()

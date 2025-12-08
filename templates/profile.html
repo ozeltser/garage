@@ -96,6 +96,58 @@
                 </form>
             </div>
         </div>
+
+        <div class="card shadow mt-4">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">API Key Management</h2>
+                
+                {% if new_api_key %}
+                <div class="alert alert-success" role="alert">
+                    <strong>Your new API Key:</strong> 
+                    <p>Please copy this key. You will not be able to see it again.</p>
+                    <code id="newApiKey">{{ new_api_key }}</code>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyApiKey()">Copy</button>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="api_key" class="form-label">Current API Key</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="api_key" value="{{ 'Key has been generated' if user.api_key_hash else 'No API key generated' }}" readonly>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('generate_api_key') }}" method="POST">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">Generate New API Key</button>
+                    </div>
+                </form>
+                <small class="text-muted d-block mt-2">
+                    Generating a new key will invalidate the old one immediately.
+                </small>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function copyApiKey() {  
+    var apiKey = document.getElementById("newApiKey").innerText;  
+    var button = event.target;  
+    navigator.clipboard.writeText(apiKey).then(function() {  
+        var originalText = button.innerText;  
+        button.innerText = 'Copied!';  
+        button.classList.remove('btn-outline-secondary');  
+        button.classList.add('btn-success');  
+        setTimeout(function() {  
+            button.innerText = originalText;  
+            button.classList.remove('btn-success');  
+            button.classList.add('btn-outline-secondary');  
+        }, 2000);  
+    }, function(err) {  
+        console.error('Could not copy text: ' + err);  
+        alert('Failed to copy. Please copy manually.');  
+    });  
+}
+</script>
 {% endblock %}
