@@ -321,13 +321,11 @@ curl -H "X-API-Key: your-api-key-here" http://localhost:5000/api/door_status
 }
 ```
 
-**Example Error Response (Invalid/Missing API Key):**
+**Example Error Response (HTTP 401 Unauthorized):**
 ```json
 {
   "error": "Invalid API key"
 }
-```
-HTTP Status: 401 Unauthorized
 
 **Possible Status Values:**
 - `closed` - Door is closed
