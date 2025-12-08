@@ -16,12 +16,21 @@ def test_imports():
     try:
         # Mock database connection to avoid initialization errors
         import unittest.mock as mock
-        with mock.patch('database.DatabaseManager._get_connection_params'):
-            with mock.patch('database.DatabaseManager._ensure_database_setup'):
-                from app import api_key_required, app
-                from database import DatabaseManager
-                print("✓ All imports successful")
-                return True
+        import sys
+        
+        # Mock DatabaseManager before importing app
+        with mock.patch('database.DatabaseManager') as MockDB:
+            mock_instance = mock.MagicMock()
+            MockDB.return_value = mock_instance
+            
+            # Remove app from sys.modules if already imported to force re-import
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            from app import api_key_required, app
+            from database import DatabaseManager
+            print("✓ All imports successful")
+            return True
     except Exception as e:
         print(f"✗ Import failed: {str(e)}")
         import traceback
@@ -158,12 +167,13 @@ def test_api_key_authentication():
         import unittest.mock as mock
         from database import DatabaseManager
         import hashlib
+        import secrets
         
         # Create a mock database manager
         db_manager = DatabaseManager.__new__(DatabaseManager)
         
-        # Test with valid API key
-        test_api_key = "a" * 64  # 64-character hex string
+        # Test with valid API key (use proper hex string format)
+        test_api_key = secrets.token_hex(32)  # Generates 64-character hex string
         test_api_key_hash = hashlib.sha256(test_api_key.encode()).hexdigest()
         
         mock_cursor = mock.MagicMock()
@@ -245,68 +255,75 @@ def test_api_key_decorator():
     print("\nTesting api_key_required decorator...")
     try:
         import unittest.mock as mock
+        import sys
         from flask import Flask
         
-        # Mock database connection
-        with mock.patch('database.DatabaseManager._get_connection_params'):
-            with mock.patch('database.DatabaseManager._ensure_database_setup'):
-                from app import api_key_required, app, db_manager
-                
-                # Create a test route
-                @api_key_required
-                def test_route():
-                    return {'status': 'ok'}
-                
-                # Test with missing API key
-                with app.test_client() as client:
-                    # Mock db_manager
-                    with mock.patch.object(db_manager, 'get_user_by_api_key') as mock_get_user:
-                        # Test missing API key header
-                        response = client.get('/api/door_status')
-                        if response.status_code != 401:
-                            print(f"✗ Missing API key should return 401, got {response.status_code}")
+        # Mock DatabaseManager before importing app
+        with mock.patch('database.DatabaseManager') as MockDB:
+            mock_db_instance = mock.MagicMock()
+            MockDB.return_value = mock_db_instance
+            
+            # Remove app from sys.modules if already imported to force re-import
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            from app import api_key_required, app, db_manager
+            
+            # Create a test route
+            @api_key_required
+            def test_route():
+                return {'status': 'ok'}
+            
+            # Test with missing API key
+            with app.test_client() as client:
+                # Mock db_manager
+                with mock.patch.object(db_manager, 'get_user_by_api_key') as mock_get_user:
+                    # Test missing API key header
+                    response = client.get('/api/door_status')
+                    if response.status_code != 401:
+                        print(f"✗ Missing API key should return 401, got {response.status_code}")
+                        return False
+                    
+                    response_data = response.get_json()
+                    if response_data.get('error') != 'Invalid API key':
+                        print(f"✗ Error message is incorrect: {response_data}")
+                        return False
+                    
+                    print("✓ Missing API key returns 401 error")
+                    
+                    # Test with invalid API key
+                    mock_get_user.return_value = None
+                    response = client.get('/api/door_status', headers={'X-API-Key': 'invalid_key'})
+                    if response.status_code != 401:
+                        print(f"✗ Invalid API key should return 401, got {response.status_code}")
+                        return False
+                    
+                    print("✓ Invalid API key returns 401 error")
+                    
+                    # Test with valid API key
+                    from user_roles import UserRole
+                    mock_get_user.return_value = {
+                        'id': 1,
+                        'username': 'testuser',
+                        'role': UserRole.REGULAR.value,
+                        'is_active': True
+                    }
+                    
+                    # Mock the door status function
+                    with mock.patch('app._get_door_status') as mock_door_status:
+                        mock_door_status.return_value = {'status': 'closed', 'timestamp': '2024-01-01'}
+                        
+                        response = client.get('/api/door_status', headers={'X-API-Key': 'valid_key'})
+                        if response.status_code != 200:
+                            print(f"✗ Valid API key should return 200, got {response.status_code}")
                             return False
                         
                         response_data = response.get_json()
-                        if response_data.get('error') != 'Invalid API key':
-                            print(f"✗ Error message is incorrect: {response_data}")
+                        if 'status' not in response_data:
+                            print(f"✗ Response data is missing 'status': {response_data}")
                             return False
                         
-                        print("✓ Missing API key returns 401 error")
-                        
-                        # Test with invalid API key
-                        mock_get_user.return_value = None
-                        response = client.get('/api/door_status', headers={'X-API-Key': 'invalid_key'})
-                        if response.status_code != 401:
-                            print(f"✗ Invalid API key should return 401, got {response.status_code}")
-                            return False
-                        
-                        print("✓ Invalid API key returns 401 error")
-                        
-                        # Test with valid API key
-                        from user_roles import UserRole
-                        mock_get_user.return_value = {
-                            'id': 1,
-                            'username': 'testuser',
-                            'role': UserRole.REGULAR.value,
-                            'is_active': True
-                        }
-                        
-                        # Mock the door status function
-                        with mock.patch('app._get_door_status') as mock_door_status:
-                            mock_door_status.return_value = {'status': 'closed', 'timestamp': '2024-01-01'}
-                            
-                            response = client.get('/api/door_status', headers={'X-API-Key': 'valid_key'})
-                            if response.status_code != 200:
-                                print(f"✗ Valid API key should return 200, got {response.status_code}")
-                                return False
-                            
-                            response_data = response.get_json()
-                            if 'status' not in response_data:
-                                print(f"✗ Response data is missing 'status': {response_data}")
-                                return False
-                            
-                            print("✓ Valid API key returns 200 and data")
+                        print("✓ Valid API key returns 200 and data")
         
         print("✓ API key decorator test passed")
         return True
@@ -321,40 +338,49 @@ def test_api_routes_exist():
     print("\nTesting API route registration...")
     try:
         import unittest.mock as mock
-        with mock.patch('database.DatabaseManager._get_connection_params'):
-            with mock.patch('database.DatabaseManager._ensure_database_setup'):
-                from app import app
-                
-                routes = [rule.rule for rule in app.url_map.iter_rules()]
-                
-                required_routes = [
-                    '/api/door_status',
-                    '/generate_api_key',
-                ]
-                
-                for route in required_routes:
-                    if route in routes:
-                        print(f"✓ Route {route} registered")
+        import sys
+        
+        # Mock DatabaseManager before importing app
+        with mock.patch('database.DatabaseManager') as MockDB:
+            mock_instance = mock.MagicMock()
+            MockDB.return_value = mock_instance
+            
+            # Remove app from sys.modules if already imported to force re-import
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            from app import app
+            
+            routes = [rule.rule for rule in app.url_map.iter_rules()]
+            
+            required_routes = [
+                '/api/door_status',
+                '/generate_api_key',
+            ]
+            
+            for route in required_routes:
+                if route in routes:
+                    print(f"✓ Route {route} registered")
+                else:
+                    print(f"✗ Route {route} NOT registered")
+                    return False
+            
+            # Verify methods for each route
+            for rule in app.url_map.iter_rules():
+                if rule.rule == '/api/door_status':
+                    if 'GET' in rule.methods:
+                        print("✓ /api/door_status accepts GET requests")
                     else:
-                        print(f"✗ Route {route} NOT registered")
+                        print("✗ /api/door_status does NOT accept GET requests")
                         return False
-                
-                # Verify methods for each route
-                for rule in app.url_map.iter_rules():
-                    if rule.rule == '/api/door_status':
-                        if 'GET' in rule.methods:
-                            print("✓ /api/door_status accepts GET requests")
-                        else:
-                            print("✗ /api/door_status does NOT accept GET requests")
-                            return False
-                    elif rule.rule == '/generate_api_key':
-                        if 'POST' in rule.methods:
-                            print("✓ /generate_api_key accepts POST requests")
-                        else:
-                            print("✗ /generate_api_key does NOT accept POST requests")
-                            return False
-                
-                return True
+                elif rule.rule == '/generate_api_key':
+                    if 'POST' in rule.methods:
+                        print("✓ /generate_api_key accepts POST requests")
+                    else:
+                        print("✗ /generate_api_key does NOT accept POST requests")
+                        return False
+            
+            return True
     except Exception as e:
         print(f"✗ Route registration test failed: {str(e)}")
         import traceback
@@ -366,53 +392,63 @@ def test_generate_api_key_route():
     print("\nTesting generate_api_key route...")
     try:
         import unittest.mock as mock
+        import sys
+        import secrets
         
-        with mock.patch('database.DatabaseManager._get_connection_params'):
-            with mock.patch('database.DatabaseManager._ensure_database_setup'):
-                from app import app, db_manager
-                from user_roles import UserRole
+        # Mock DatabaseManager before importing app
+        with mock.patch('database.DatabaseManager') as MockDB:
+            mock_db_instance = mock.MagicMock()
+            MockDB.return_value = mock_db_instance
+            
+            # Remove app from sys.modules if already imported to force re-import
+            if 'app' in sys.modules:
+                del sys.modules['app']
+            
+            from app import app, db_manager
+            from user_roles import UserRole
+            
+            with app.test_client() as client:
+                # Test without login (should redirect)
+                response = client.post('/generate_api_key')
+                if response.status_code not in [302, 401]:
+                    print(f"✗ Unauthenticated request should redirect or return 401, got {response.status_code}")
+                    return False
                 
-                with app.test_client() as client:
-                    # Test without login (should redirect)
-                    response = client.post('/generate_api_key')
-                    if response.status_code not in [302, 401]:
-                        print(f"✗ Unauthenticated request should redirect or return 401, got {response.status_code}")
-                        return False
+                print("✓ Unauthenticated request is rejected")
+                
+                # Test with login
+                with mock.patch('flask_login.utils._get_user') as mock_get_user:
+                    mock_user = mock.MagicMock()
+                    mock_user.id = 'testuser'
+                    mock_user.is_authenticated = True
+                    mock_get_user.return_value = mock_user
                     
-                    print("✓ Unauthenticated request is rejected")
-                    
-                    # Test with login
-                    with mock.patch('flask_login.utils._get_user') as mock_get_user:
-                        mock_user = mock.MagicMock()
-                        mock_user.id = 'testuser'
-                        mock_user.is_authenticated = True
-                        mock_get_user.return_value = mock_user
+                    with mock.patch.object(db_manager, 'generate_api_key') as mock_generate:
+                        # Use proper hex string format
+                        mock_generate.return_value = secrets.token_hex(32)
                         
-                        with mock.patch.object(db_manager, 'generate_api_key') as mock_generate:
-                            mock_generate.return_value = 'a' * 64
-                            
-                            # Set up session
-                            with client.session_transaction() as sess:
-                                sess['_user_id'] = 'testuser'
-                            
-                            response = client.post('/generate_api_key', follow_redirects=False)
-                            if response.status_code != 302:
-                                print(f"✗ Authenticated request should redirect, got {response.status_code}")
-                                return False
-                            
-                            print("✓ Authenticated request is processed")
-                            
-                            # Verify the method was called with correct username
-                            if mock_generate.called:
-                                call_args = mock_generate.call_args
-                                if call_args[0][0] == 'testuser':
-                                    print("✓ generate_api_key called with correct username")
-                                else:
-                                    print(f"✗ generate_api_key called with incorrect username: {call_args[0][0]}")
-                                    return False
+                        # Set up session
+                        with client.session_transaction() as sess:
+                            sess['_user_id'] = 'testuser'
+                        
+                        response = client.post('/generate_api_key', follow_redirects=False)
+                        if response.status_code != 302:
+                            print(f"✗ Authenticated request should redirect, got {response.status_code}")
+                            return False
+                        
+                        print("✓ Authenticated request is processed")
+                        
+                        # Verify the method was called with correct username
+                        if mock_generate.called:
+                            call_args = mock_generate.call_args
+                            if call_args[0][0] == 'testuser':
+                                print("✓ generate_api_key called with correct username")
                             else:
-                                print("✗ generate_api_key was not called")
+                                print(f"✗ generate_api_key called with incorrect username: {call_args[0][0]}")
                                 return False
+                        else:
+                            print("✗ generate_api_key was not called")
+                            return False
         
         print("✓ generate_api_key route test passed")
         return True
