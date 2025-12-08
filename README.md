@@ -288,6 +288,50 @@ All sensitive configuration is managed through environment variables in `.env`:
 - `POST /run_script`: Execute the Python script (requires authentication)
 - `GET /api/door_status`: Get door status via API (requires API key)
 
+### API Authentication
+
+The `/api/door_status` endpoint requires API key authentication.
+
+#### Obtaining an API Key
+
+1. Log in to the application
+2. Navigate to your Profile page (click on your username or go to `/profile`)
+3. Click the "Generate API Key" button
+4. Copy the generated API key immediately - it will only be shown once
+
+#### Using the API
+
+**Required Header:**
+```
+X-API-Key: your-api-key-here
+```
+
+**Example Request:**
+```bash
+curl -H "X-API-Key: your-api-key-here" http://localhost:5000/api/door_status
+```
+
+**Example Success Response:**
+```json
+{
+  "success": true,
+  "status": "closed",
+  "raw_output": "Door Closed",
+  "error": null
+}
+```
+
+**Example Error Response (HTTP 401 Unauthorized):**
+```json
+{
+  "error": "Invalid API key"
+}
+
+**Possible Status Values:**
+- `closed` - Door is closed
+- `open` - Door is open
+- `unknown` - Status could not be determined
+
 ## Development
 
 ### Running in Development Mode
