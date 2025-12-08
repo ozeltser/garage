@@ -172,8 +172,8 @@ def test_api_key_authentication():
         # Create a mock database manager
         db_manager = DatabaseManager.__new__(DatabaseManager)
         
-        # Test with valid API key (use proper hex string format)
-        test_api_key = secrets.token_hex(32)  # Generates 64-character hex string
+        # Test with valid API key (generate realistic 64-character hex string)
+        test_api_key = secrets.token_hex(32)  # 32 random bytes as 64-character hex string
         test_api_key_hash = hashlib.sha256(test_api_key.encode()).hexdigest()
         
         mock_cursor = mock.MagicMock()
@@ -424,7 +424,7 @@ def test_generate_api_key_route():
                     mock_get_user.return_value = mock_user
                     
                     with mock.patch.object(db_manager, 'generate_api_key') as mock_generate:
-                        # Use proper hex string format
+                        # Generate realistic 64-character hex API key for testing
                         mock_generate.return_value = secrets.token_hex(32)
                         
                         # Set up session
