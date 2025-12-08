@@ -12,6 +12,16 @@ import secrets
 # Add the parent directory to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Test constants
+TEST_VALID_API_KEY = "test_api_key_12345"
+TEST_INVALID_API_KEY = "invalid_api_key"
+TEST_INACTIVE_USER_KEY = "inactive_user_key"
+TEST_CONSISTENCY_KEY = "consistency_test_key"
+TEST_USERNAME = "testuser"
+TEST_NONEXISTENT_USERNAME = "nonexistent_user"
+TEST_INACTIVE_USERNAME = "inactive_user"
+EXPECTED_API_KEY_LENGTH = 64
+
 def test_imports():
     """Test that all imports work correctly."""
     print("Testing imports...")
@@ -36,8 +46,7 @@ def test_get_user_by_api_key_valid():
         from database import DatabaseManager
         
         # Create a test API key and its hash
-        test_api_key = "test_api_key_12345"
-        api_key_hash = hashlib.sha256(test_api_key.encode()).hexdigest()
+        api_key_hash = hashlib.sha256(TEST_VALID_API_KEY.encode()).hexdigest()
         
         # Mock user data that would be returned from database
         mock_user = {
@@ -62,7 +71,7 @@ def test_get_user_by_api_key_valid():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    result = db.get_user_by_api_key(test_api_key)
+                    result = db.get_user_by_api_key(TEST_VALID_API_KEY)
                     
                     # Verify the result
                     assert result is not None, "Result should not be None"
@@ -89,8 +98,6 @@ def test_get_user_by_api_key_invalid():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        test_api_key = "invalid_api_key"
-        
         # Mock the database connection to return None (no user found)
         mock_cursor = mock.MagicMock()
         mock_cursor.fetchone.return_value = None
@@ -106,7 +113,7 @@ def test_get_user_by_api_key_invalid():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    result = db.get_user_by_api_key(test_api_key)
+                    result = db.get_user_by_api_key(TEST_INVALID_API_KEY)
                     
                     # Verify the result is None
                     assert result is None, "Result should be None for invalid API key"
@@ -126,8 +133,6 @@ def test_get_user_by_api_key_inactive_user():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        test_api_key = "inactive_user_key"
-        
         # Mock the database to return None (inactive users are filtered by SQL query)
         mock_cursor = mock.MagicMock()
         mock_cursor.fetchone.return_value = None
@@ -143,7 +148,7 @@ def test_get_user_by_api_key_inactive_user():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    result = db.get_user_by_api_key(test_api_key)
+                    result = db.get_user_by_api_key(TEST_INACTIVE_USER_KEY)
                     
                     # Verify the result is None (inactive users are not returned)
                     assert result is None, "Result should be None for inactive user"
@@ -167,8 +172,6 @@ def test_generate_api_key_success():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        username = "testuser"
-        
         # Mock the database connection to simulate successful update
         mock_cursor = mock.MagicMock()
         mock_cursor.rowcount = 1  # 1 row updated
@@ -184,17 +187,17 @@ def test_generate_api_key_success():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    api_key = db.generate_api_key(username)
+                    api_key = db.generate_api_key(TEST_USERNAME)
                     
                     # Verify the API key was generated
                     assert api_key is not None, "API key should be generated"
                     assert isinstance(api_key, str), "API key should be a string"
-                    assert len(api_key) == 64, "API key should be 64 characters (32 bytes hex)"
+                    assert len(api_key) == EXPECTED_API_KEY_LENGTH, f"API key should be {EXPECTED_API_KEY_LENGTH} characters (32 bytes hex)"
                     
                     # Verify the update query was called
                     mock_cursor.execute.assert_called_once()
                     call_args = mock_cursor.execute.call_args
-                    assert username in call_args[0][1], "Username should be in query parameters"
+                    assert TEST_USERNAME in call_args[0][1], "Username should be in query parameters"
                     
                     print("✓ Successful API key generation test passed")
                     return True
@@ -211,8 +214,6 @@ def test_generate_api_key_user_not_found():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        username = "nonexistent_user"
-        
         # Mock the database connection to simulate no rows updated
         mock_cursor = mock.MagicMock()
         mock_cursor.rowcount = 0  # 0 rows updated
@@ -228,7 +229,7 @@ def test_generate_api_key_user_not_found():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    api_key = db.generate_api_key(username)
+                    api_key = db.generate_api_key(TEST_NONEXISTENT_USERNAME)
                     
                     # Verify no API key was generated
                     assert api_key is None, "API key should be None when user not found"
@@ -248,8 +249,6 @@ def test_generate_api_key_inactive_user():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        username = "inactive_user"
-        
         # Mock the database connection to simulate no rows updated (inactive user filtered)
         mock_cursor = mock.MagicMock()
         mock_cursor.rowcount = 0  # 0 rows updated
@@ -265,7 +264,7 @@ def test_generate_api_key_inactive_user():
             with mock.patch.object(DatabaseManager, '_get_connection_params', return_value={}):
                 db = DatabaseManager()
                 with mock.patch.object(db, 'get_connection', return_value=mock_connection):
-                    api_key = db.generate_api_key(username)
+                    api_key = db.generate_api_key(TEST_INACTIVE_USERNAME)
                     
                     # Verify no API key was generated
                     assert api_key is None, "API key should be None for inactive user"
@@ -289,9 +288,6 @@ def test_api_key_hash_consistency():
         import unittest.mock as mock
         from database import DatabaseManager
         
-        test_api_key = "consistency_test_key"
-        username = "testuser"
-        
         # Mock the database connection
         mock_cursor = mock.MagicMock()
         mock_cursor.rowcount = 1
@@ -308,10 +304,10 @@ def test_api_key_hash_consistency():
                 db = DatabaseManager()
                 
                 # Mock secrets.token_hex to return a known value
-                with mock.patch('secrets.token_hex', return_value=test_api_key):
+                with mock.patch('database.secrets.token_hex', return_value=TEST_CONSISTENCY_KEY):
                     with mock.patch.object(db, 'get_connection', return_value=mock_connection):
                         # Generate API key
-                        generated_key = db.generate_api_key(username)
+                        generated_key = db.generate_api_key(TEST_USERNAME)
                         
                         # Get the hash that was stored
                         generate_call_args = mock_cursor.execute.call_args
@@ -319,7 +315,7 @@ def test_api_key_hash_consistency():
                         
                         # Now mock get_user_by_api_key to return the user
                         mock_cursor.reset_mock()
-                        mock_user = {'id': 1, 'username': username, 'role': 'regular', 'is_active': True}
+                        mock_user = {'id': 1, 'username': TEST_USERNAME, 'role': 'regular', 'is_active': True}
                         mock_cursor.fetchone.return_value = mock_user
                         
                         # Retrieve user with the generated key
@@ -331,7 +327,7 @@ def test_api_key_hash_consistency():
                         
                         # Verify hashes match
                         assert stored_hash == lookup_hash, "Hash used for storage and lookup should match"
-                        expected_hash = hashlib.sha256(test_api_key.encode()).hexdigest()
+                        expected_hash = hashlib.sha256(TEST_CONSISTENCY_KEY.encode()).hexdigest()
                         assert stored_hash == expected_hash, "Hash should match expected SHA256"
                         
                         print("✓ API key hash consistency test passed")
