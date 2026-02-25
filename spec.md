@@ -34,7 +34,7 @@ The Garage Web App is a Python Flask application that provides secure, web-based
                                                │ Automation   │
                                                │ HAT (GPIO)   │
                                                │  - relay.py  │
-                                               │  - doorStatus│
+                                               │  - doorStatus.py│
                                                └──────────────┘
 ```
 
