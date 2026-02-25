@@ -347,7 +347,7 @@ Performs:
 | HTTPS | Nginx handles TLS termination |
 | Security Headers | HSTS, X-Frame-Options, X-Content-Type-Options via Nginx |
 | RBAC Enforcement | `@admin_required` decorator on admin routes |
-| Soft Delete | Users are deactivated (not hard-deleted) via `is_active` flag |
+| Self-Deletion Prevention | Admins are prevented from deleting their own accounts |
 | Last Admin Protection | System prevents deletion of the last admin user |
 | CORS Configuration | Configurable allowed origins for WebSocket connections |
 
