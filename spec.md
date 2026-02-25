@@ -355,7 +355,11 @@ Performs:
 
 The `validate_security.py` script checks for common security issues in the deployment.
 
-### 11.3 Recommendations for Production
+### 11.3 TODO
+
+- [ ] **CSRF Protection**: Implement Cross-Site Request Forgery protection for all state-changing POST routes (`/run_script`, `/profile`, `/generate_api_key`, `/admin/create_user`, `/admin/delete_user/<username>`, `/admin/change_password/<username>`). Use Flask-WTF's `CSRFProtect` or manually generate and validate CSRF tokens via `secrets.token_hex()` stored in the session. Include the token as a hidden field in all forms and verify it server-side before processing any POST request.
+
+### 11.4 Recommendations for Production
 
 - Enable SSL/TLS for MySQL connections
 - Set specific `CORS_ALLOWED_ORIGINS` (do not use `*`)
