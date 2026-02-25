@@ -1,35 +1,38 @@
 # Garage Web App
 
-A Python Flask web application that provides a secure login interface and allows authenticated users to execute Python scripts on the server. Perfect for controlling a garage door via Raspberry Pi with Automation HAT. The application is designed to be responsive and work well on both mobile and desktop browsers.
+A Python Flask web application for controlling a garage door via a Raspberry Pi with a Pimoroni Automation HAT. The app provides secure MySQL-backed authentication, role-based access control (RBAC), real-time door status monitoring over WebSocket, and a responsive UI that works well on both mobile and desktop browsers.
 
-The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry Pi](https://www.adafruit.com/product/3289?srsltid=AfmBOorXWBYoXvtCgz0uonOQeWMe-8TcBYCF4s3OaC758LlvVMGKlwBfXfg)
+The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry Pi](https://www.adafruit.com/product/3289).
 
-## 📚 Documentation
+## Documentation
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide for production deployment
 - **[PRODUCTION.md](PRODUCTION.md)** - Complete production deployment guide for Raspberry Pi
-- **[RBAC_QUICKSTART.md](RBAC_QUICKSTART.md)** - Quick guide for RBAC features ⭐ NEW
-- **[RBAC.md](RBAC.md)** - Complete RBAC documentation ⭐ NEW
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[SECURITY.md](SECURITY.md)** - Security implementation details
+- **[RBAC.md](RBAC.md)** - Complete RBAC documentation
+- **[RBAC_QUICKSTART.md](RBAC_QUICKSTART.md)** - Quick guide for RBAC features
+- **[RBAC_SUMMARY.md](RBAC_SUMMARY.md)** - RBAC summary
+- **[RBAC_MATRIX.md](RBAC_MATRIX.md)** - RBAC permissions matrix
 - **[MIGRATION.md](MIGRATION.md)** - Database migration guide
+- **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - Deployment documentation summary
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Quick reference for common issues
 - **[network-examples/](network-examples/)** - Network configuration examples
 
 ## Features
 
-- 🔐 **Secure MySQL Authentication**: Database-backed user login system with encrypted password storage
-- 👥 **Role-Based Access Control (RBAC)**: Admin and Regular user roles with different permissions ⭐ NEW
-- 📱 **Responsive Design**: Optimized for both mobile and desktop browsers
-- 🖥️ **Script Execution**: Execute Python scripts on the server with a simple button click
-- 👤 **User Profile Management**: Edit user information and change passwords
-- 🔧 **Admin Panel**: Create, delete users and manage passwords (Admin only) ⭐ NEW
-- 🎨 **Modern UI**: Clean, Bootstrap-based interface with smooth animations
-- ⚡ **Real-time Feedback**: AJAX-based script execution with loading indicators
-- 📊 **Output Display**: View script output and errors in real-time
-- 🔄 **Real-time Door Status Updates**: Server-side scheduling with WebSocket push notifications ⭐ NEW
-- 🔒 **Environment-based Configuration**: Secure configuration using environment variables
-- 🛡️ **SSL Support**: Optional SSL/TLS connection to MySQL database
-- 🤖 **Automation HAT Support**: Control relays and read sensors on Raspberry Pi
+- **Secure MySQL Authentication** - Database-backed user login with encrypted password storage
+- **Role-Based Access Control (RBAC)** - Admin and Regular user roles with different permissions
+- **Real-time Door Status** - Server-side scheduling with WebSocket (Socket.IO) push notifications
+- **Admin Panel** - Create, delete users and manage passwords (Admin only)
+- **User Profile Management** - Edit personal information, change passwords, generate API keys, toggle SMS notifications
+- **REST API** - API key-authenticated endpoint for door status
+- **Responsive Design** - Mobile-friendly Bootstrap 5 UI with dark/light theme toggle
+- **Script Execution** - Execute the garage door relay script with real-time output display
+- **Automation HAT Support** - Control relays and read sensors on Raspberry Pi
+- **Environment-based Configuration** - Secure configuration using environment variables
+- **SSL Support** - Optional SSL/TLS connections to MySQL database
+- **Privacy & Terms Pages** - Built-in privacy policy and terms of service pages
 
 ## Quick Start (Development)
 
@@ -43,7 +46,7 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ozeltser/garage.git
    cd garage
    ```
 
@@ -52,7 +55,7 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
    pip install -r requirements.txt
    ```
 
-3. Set up database and configure `.env` (see Installation section below)
+3. Set up database and configure `.env` (see [Installation](#installation) section below)
 
 4. Initialize database:
    ```bash
@@ -69,17 +72,11 @@ The hardware used is Raspberry Pi 3 and Pimoroni [Automation HAT for Raspberry P
    http://localhost:5000
    ```
 
-## Prerequisites
-
-- Python 3.7 or higher
-- pip (Python package installer)
-- MySQL 5.7+ or MariaDB 10.2+
-
 ## Installation
 
 ### 1. Clone the repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/ozeltser/garage.git
 cd garage
 ```
 
@@ -119,10 +116,16 @@ Copy the example environment file and customize it:
 cp .env.example .env
 ```
 
-Edit `.env` with your database configuration:
+Edit `.env` with your configuration:
 ```bash
 # Flask configuration
 SECRET_KEY=your-unique-secret-key-generate-a-strong-one
+FLASK_ENV=development
+FLASK_DEBUG=True
+
+# Application settings
+APP_HOST=0.0.0.0
+APP_PORT=5000
 
 # MySQL Database Configuration
 DB_HOST=localhost
@@ -132,9 +135,6 @@ DB_USER=garage_user
 DB_PASSWORD=your-secure-database-password
 
 # For SSL connections (optional but recommended)
-# Download the appropriate CA certificate from your database provider
-# For MySQL on Azure, download from: https://learn.microsoft.com/en-us/azure/mysql/
-# For AWS RDS, download from: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
 DB_SSL_CA=/path/to/ca-cert.pem
 DB_SSL_CERT=/path/to/client-cert.pem
 DB_SSL_KEY=/path/to/client-key.pem
@@ -142,6 +142,12 @@ DB_SSL_KEY=/path/to/client-key.pem
 # Initial admin user (used for first-time setup)
 DEFAULT_USERNAME=admin
 DEFAULT_PASSWORD=your-secure-admin-password
+
+# Door status refresh interval in seconds
+DOOR_STATUS_REFRESH_INTERVAL=10
+
+# CORS allowed origins for WebSocket (comma-separated; use "*" for dev only)
+# CORS_ALLOWED_ORIGINS=https://yourdomain.com
 ```
 
 **Important Security Notes:**
@@ -159,7 +165,7 @@ python init_db.py
 ```
 
 This script will:
-- Create the necessary database tables
+- Create the necessary database tables (including RBAC columns)
 - Set up the initial admin user with credentials from your `.env` file
 - Verify database connectivity
 
@@ -180,17 +186,27 @@ After running `init_db.py`, you can log in with:
 - **Username**: Value of `DEFAULT_USERNAME` from your `.env` file (default: `admin`)
 - **Password**: Value of `DEFAULT_PASSWORD` from your `.env` file
 
+### Adding New Users (Admin Panel)
+Admin users can create and manage users through the web-based Admin Panel:
+
+1. Log in with an admin account
+2. Navigate to the **Admin** panel from the navigation menu
+3. Click **Create User** to add a new user
+4. Assign a role (`admin` or `regular`) during creation
+
+Admins can also delete users and reset passwords from the Admin Panel.
+
 ### User Profile Management
-Users can manage their profile information by clicking the "Profile" link in the dashboard:
-- Update first name and last name
-- Update email address
-- Update phone number
+All users can manage their own profile by clicking "Profile" in the dashboard:
+- Update first name, last name, email, and phone number
+- Toggle SMS notifications
 - Change password (requires current password verification)
+- Generate an API key for programmatic access
 
 All profile fields are optional and can be updated independently.
 
-### Adding New Users
-Currently, new users must be added directly to the database. You can use the database manager:
+### Programmatic User Management
+Users can also be managed via Python scripts:
 
 ```python
 from database import DatabaseManager
@@ -199,14 +215,10 @@ from dotenv import load_dotenv
 load_dotenv()
 db_manager = DatabaseManager()
 
-# Create a new user
-db_manager.create_user('newuser', 'secure-password')
-```
+# Create a new user with a specific role
+db_manager.create_user('newuser', 'secure-password', 'regular')
 
-### Password Management
-To update a user's password:
-```python
-# Update password
+# Update a password
 db_manager.update_password('username', 'new-secure-password')
 ```
 
@@ -214,79 +226,136 @@ db_manager.update_password('username', 'new-secure-password')
 
 ```
 garage/
-├── app.py                 # Main Flask application with MySQL authentication
-├── database.py            # Database manager for secure MySQL operations
-├── init_db.py            # Database initialization script
-├── migrate_db.py         # Database migration script for schema updates
-├── requirements.txt       # Python dependencies
-├── relay.py              # Example Python script to execute
-├── .env.example          # Environment variables template
-├── .gitignore           # Git ignore file (excludes .env)
-├── MIGRATION.md          # Database migration guide
+├── app.py                          # Main Flask application
+├── database.py                     # MySQL database manager
+├── user_roles.py                   # RBAC role definitions (admin, regular)
+├── doorStatus.py                   # Door sensor reader (Automation HAT)
+├── relay.py                        # Garage door relay control (Automation HAT)
+├── init_db.py                      # Database initialization script
+├── migrate_db.py                   # Database schema migration
+├── migrate_rbac.py                 # RBAC migration for existing installs
+├── migrate_api_key.py              # API key column migration
+├── migrate_sms_notifications.py    # SMS notifications migration
+├── validate_security.py            # Security validation tool
+├── requirements.txt                # Python dependencies
+├── .env.example                    # Environment variables template
+├── .gitignore                      # Git ignore rules
+├── garage.service                  # Systemd service file
+├── nginx-garage.conf               # Nginx reverse proxy configuration
+├── install_production.sh           # Automated production installer
+├── backup.sh                       # Database backup script
+├── restore.sh                      # Restore from backup
+├── health_check.sh                 # System health monitoring
+├── monitor.sh                      # Automated service monitoring
 ├── templates/
-│   ├── base.html         # Base template with common layout
-│   ├── login.html        # Login page template
-│   ├── dashboard.html    # Dashboard template
-│   └── profile.html      # User profile page template
-└── static/
-    ├── css/
-    │   └── style.css     # Custom styles for responsive design
-    └── js/
-        └── app.js        # JavaScript for AJAX and interactions
+│   ├── base.html                   # Base template layout
+│   ├── login.html                  # Login page
+│   ├── dashboard.html              # Main control dashboard
+│   ├── profile.html                # User profile management
+│   ├── admin.html                  # Admin user management panel
+│   ├── create_user.html            # Create new user form
+│   ├── change_password.html        # Admin password change form
+│   ├── privacy_policy.html         # Privacy policy page
+│   └── terms_and_conditions.html   # Terms and conditions page
+├── static/
+│   ├── css/
+│   │   └── style.css               # Custom CSS with dark mode support
+│   └── js/
+│       └── app.js                  # Frontend JavaScript logic
+├── network-examples/               # Network configuration guides
+│   ├── README.md
+│   ├── static-ip.md
+│   └── port-forwarding.md
+└── tests/
+    ├── test_rbac.py                # RBAC functionality tests
+    ├── test_api_key.py             # API key generation tests
+    ├── test_api_keys.py            # API key management tests
+    ├── test_sms_notifications.py   # SMS notification tests
+    ├── test_socketio.py            # WebSocket tests
+    └── test_terms.py               # Terms acceptance tests
 ```
 
 ## Configuration
 
-### Security Features
-- ✅ **MySQL Database Authentication**: No more hardcoded passwords
-- ✅ **Environment Variable Configuration**: Secrets stored securely outside code
-- ✅ **Password Hashing**: Uses Werkzeug's secure password hashing
-- ✅ **Optional SSL/TLS**: Secure database connections
-- ✅ **Logging**: Security events and errors are logged
-- ✅ **Input Validation**: Database queries use parameterized statements
-
 ### Environment Variables
 All sensitive configuration is managed through environment variables in `.env`:
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SECRET_KEY` | Flask secret key for sessions | Yes |
-| `DB_HOST` | MySQL server hostname | Yes |
-| `DB_PORT` | MySQL server port | No (default: 3306) |
-| `DB_NAME` | Database name | Yes |
-| `DB_USER` | Database username | Yes |
-| `DB_PASSWORD` | Database password | Yes |
-| `DB_SSL_CA` | SSL CA certificate path | No |
-| `DB_SSL_CERT` | SSL client certificate path | No |
-| `DB_SSL_KEY` | SSL client key path | No |
-| `DEFAULT_USERNAME` | Initial admin username | No (default: admin) |
-| `DEFAULT_PASSWORD` | Initial admin password | No (default: admin) |
-| `DOOR_STATUS_REFRESH_INTERVAL` | Door status polling interval in seconds | No (default: 10) |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `SECRET_KEY` | Flask secret key for sessions | Yes | — |
+| `FLASK_ENV` | Flask environment (`development` or `production`) | No | `development` |
+| `FLASK_DEBUG` | Enable debug mode | No | `True` |
+| `APP_HOST` | Application bind address | No | `0.0.0.0` |
+| `APP_PORT` | Application port | No | `5000` |
+| `DB_HOST` | MySQL server hostname | No | `localhost` |
+| `DB_PORT` | MySQL server port | No | `3306` |
+| `DB_NAME` | Database name | Yes | — |
+| `DB_USER` | Database username | Yes | — |
+| `DB_PASSWORD` | Database password | Yes | — |
+| `DB_SSL_CA` | SSL CA certificate path | No | — |
+| `DB_SSL_CERT` | SSL client certificate path | No | — |
+| `DB_SSL_KEY` | SSL client key path | No | — |
+| `DEFAULT_USERNAME` | Initial admin username | No | `admin` |
+| `DEFAULT_PASSWORD` | Initial admin password | No | `admin` |
+| `DOOR_STATUS_REFRESH_INTERVAL` | Door status polling interval in seconds | No | `10` |
+| `CORS_ALLOWED_ORIGINS` | Allowed WebSocket origins (comma-separated) | No | `*` |
 
-### Script Customization
-- Edit `relay.py` to customize what runs when the button is clicked
-- The script output (stdout) and errors (stderr) are displayed in the web interface
-- Scripts have a 30-second timeout limit
+### Security Features
+- **MySQL Database Authentication** - No hardcoded passwords
+- **Environment Variable Configuration** - Secrets stored outside code
+- **Password Hashing** - Uses Werkzeug's secure password hashing with salt
+- **Role-Based Access Control** - Admin and Regular roles with route-level enforcement
+- **API Key Authentication** - SHA-256 hashed API keys stored in database
+- **Parameterized SQL Queries** - Prevents SQL injection
+- **Optional SSL/TLS** - Secure database connections
+- **Security Event Logging** - Login attempts and admin actions are logged
 
 ## Technology Stack
 
-- **Backend**: Flask (Python web framework)
+- **Backend**: Python 3.7+, Flask 3.0, Flask-Login 0.6
+- **Real-time**: Flask-SocketIO 5.3 with Socket.IO for WebSocket communication
+- **Scheduling**: APScheduler 3.10 for background door status polling
 - **Database**: MySQL/MariaDB with PyMySQL driver
-- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
-- **Authentication**: Flask-Login with MySQL backend
-- **Security**: Werkzeug password hashing, SSL/TLS support
+- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5.1
+- **Authentication**: Flask-Login with MySQL backend, Werkzeug password hashing
+- **Hardware**: Pimoroni automationhat library for Raspberry Pi Automation HAT
 - **Configuration**: python-dotenv for environment management
+- **Deployment**: Nginx (reverse proxy), systemd (service management)
 
-## API Endpoints
+## Routes and API Endpoints
 
-- `GET /`: Home page (redirects to login if not authenticated)
-- `GET /login`: Login page
-- `POST /login`: Process login credentials against MySQL database
-- `GET /logout`: Logout and redirect to login
-- `GET /profile`: User profile page (requires authentication)
-- `POST /profile`: Update user profile and password (requires authentication)
-- `POST /run_script`: Execute the Python script (requires authentication)
-- `GET /api/door_status`: Get door status via API (requires API key)
+### Web Routes
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/` | Yes | Home / Dashboard (redirects to login if unauthenticated) |
+| GET/POST | `/login` | No | Login page and credential processing |
+| GET | `/logout` | Yes | Logout and redirect to login |
+| GET/POST | `/profile` | Yes | User profile management |
+| POST | `/run_script` | Yes | Execute the garage door relay script |
+| GET | `/door_status` | Yes | Get current door status (web UI) |
+| POST | `/generate_api_key` | Yes | Generate a new API key for current user |
+| GET | `/admin` | Admin | Admin panel - list all users |
+| GET/POST | `/admin/create_user` | Admin | Create a new user |
+| POST | `/admin/delete_user/<username>` | Admin | Delete a user |
+| GET/POST | `/admin/change_password/<username>` | Admin | Change a user's password |
+| GET | `/privacy-policy` | No | Privacy policy page |
+| GET | `/terms-and-conditions` | No | Terms and conditions page |
+
+### REST API
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/door_status` | API Key | Get door status via API |
+
+### WebSocket Events
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `connect` | Client -> Server | Client connects; triggers scheduler initialization |
+| `disconnect` | Client -> Server | Client disconnects |
+| `request_status` | Client -> Server | Client requests current door status |
+| `door_status_update` | Server -> Client | Server pushes door status changes |
 
 ### API Authentication
 
@@ -326,6 +395,7 @@ curl -H "X-API-Key: your-api-key-here" http://localhost:5000/api/door_status
 {
   "error": "Invalid API key"
 }
+```
 
 **Possible Status Values:**
 - `closed` - Door is closed
@@ -342,40 +412,36 @@ Set `FLASK_DEBUG=True` in your `.env` file for development features:
 
 For production, set `FLASK_DEBUG=False`.
 
-### Adding New Users
-Use the database manager to add users programmatically:
-```python
-from database import DatabaseManager
-from dotenv import load_dotenv
-
-load_dotenv()
-db_manager = DatabaseManager()
-db_manager.create_user('newuser', 'secure-password')
+### Running Tests
+```bash
+python test_rbac.py
+python test_api_keys.py
+python test_socketio.py
+python test_sms_notifications.py
+python test_terms.py
 ```
 
 ### Database Management
 The `database.py` module provides secure methods for:
 - User creation and authentication
-- Password updates
-- User account management
-- Secure database connections
+- Password updates and profile management
+- API key generation and validation
+- Role-based user retrieval
+- User account activation/deactivation
 
 ## Production Deployment
-
-### 🚀 Raspberry Pi Production Guide
 
 For detailed instructions on deploying this application in a production environment on a Raspberry Pi, see **[PRODUCTION.md](PRODUCTION.md)**.
 
 The production guide includes:
 - Complete Raspberry Pi setup and configuration
-- Automated installation scripts
-- Systemd service configuration for auto-start
-- Nginx reverse proxy setup with HTTPS
+- Automated installation script (`install_production.sh`)
+- Systemd service configuration for auto-start (`garage.service`)
+- Nginx reverse proxy setup with HTTPS (`nginx-garage.conf`)
 - Database optimization for Raspberry Pi
-- Automated backup and restore procedures
-- System monitoring and health checks
+- Automated backup (`backup.sh`) and restore (`restore.sh`) procedures
+- System monitoring (`health_check.sh`, `monitor.sh`) and health checks
 - Security hardening recommendations
-- Troubleshooting guides
 
 ### Quick Production Installation
 
@@ -391,25 +457,27 @@ sudo bash install_production.sh
 ## Security Considerations
 
 ### Production Deployment Checklist
-- ✅ **Use HTTPS**: Deploy behind a reverse proxy with SSL/TLS
-- ✅ **Strong Passwords**: Generate secure passwords for all accounts
-- ✅ **SSL Database Connections**: Enable SSL/TLS for database connections
-- ✅ **Environment Variables**: Never commit `.env` files to version control
-- ✅ **Database Security**: Use dedicated database user with minimal privileges
-- ✅ **Network Security**: Restrict database access to application servers only
-- ✅ **Regular Updates**: Keep dependencies updated
-- ✅ **Monitoring**: Monitor logs for security events
+- **Use HTTPS** - Deploy behind a reverse proxy with SSL/TLS
+- **Strong Passwords** - Generate secure passwords for all accounts
+- **SSL Database Connections** - Enable SSL/TLS for database connections
+- **Environment Variables** - Never commit `.env` files to version control
+- **Database Security** - Use dedicated database user with minimal privileges
+- **Network Security** - Restrict database access to application servers only
+- **Regular Updates** - Keep dependencies updated
+- **Monitoring** - Monitor logs for security events
+- **Set CORS Origins** - Configure `CORS_ALLOWED_ORIGINS` for production (do not use `*`)
 
 ### Additional Security Measures
 Consider implementing for production:
-- CSRF protection
 - Rate limiting for login attempts
 - Two-factor authentication
-- Session timeout
+- Session timeout configuration
 - Regular security audits
-- Database backups and encryption at rest
+- Database encryption at rest
 
 ## Troubleshooting
+
+For detailed troubleshooting information, see **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**.
 
 ### Database Connection Issues
 1. Verify MySQL server is running and accessible
