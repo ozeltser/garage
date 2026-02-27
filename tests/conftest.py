@@ -137,3 +137,13 @@ def admin_client(app, mock_db):
             sess["_user_id"] = "admin"
             sess["_fresh"] = True
         yield c
+
+
+# ---------------------------------------------------------------------------
+# Session lifecycle hook
+# ---------------------------------------------------------------------------
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Stop the module-level patcher when the test session ends."""
+    _init_patcher.stop()

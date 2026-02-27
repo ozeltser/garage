@@ -3,6 +3,7 @@ Integration tests for Flask HTTP routes (app.py).
 
 Uses the test client fixtures from conftest.py; no real database or hardware.
 """
+import secrets
 import subprocess
 from unittest.mock import MagicMock, patch
 
@@ -217,7 +218,6 @@ class TestGenerateApiKey:
         assert "/login" in response.headers["Location"]
 
     def test_authenticated_generates_key_and_redirects(self, auth_client, mock_db):
-        import secrets
         mock_db.generate_api_key.return_value = secrets.token_hex(32)
         response = auth_client.post("/generate_api_key", follow_redirects=False)
         assert response.status_code == 302
@@ -383,7 +383,12 @@ class TestAdminRoutes:
         mock_db.update_user_password_by_admin.assert_called_once_with("alice", "newpass")
 
     def test_change_password_mismatched(self, admin_client, mock_db):
-        mock_db.get_user_by_username.return_value = {
+        # admin_client sets get_user_by_username.return_value to the admin user.
+        # We keep that for Flask-Login auth but also need it to return alice's
+        # data when the route calls get_user_by_username('alice') to render the
+        # form on validation error.  Use side_effect to route by argument.
+        admin_user_data = mock_db.get_user_by_username.return_value
+        alice_user_data = {
             "id": 1,
             "username": "alice",
             "role": UserRole.REGULAR.value,
@@ -396,10 +401,21 @@ class TestAdminRoutes:
             "api_key_hash": None,
             "password_hash": "hashed",
         }
+
+        def get_user_by_username(username):
+            if username == "admin":
+                return admin_user_data
+            if username == "alice":
+                return alice_user_data
+            return None
+
+        mock_db.get_user_by_username.side_effect = get_user_by_username
+
         response = admin_client.post(
             "/admin/change_password/alice",
             data={"new_password": "pass1", "confirm_password": "pass2"},
             follow_redirects=True,
         )
         assert response.status_code == 200
+        assert b"do not match" in response.data.lower()
         assert not mock_db.update_user_password_by_admin.called

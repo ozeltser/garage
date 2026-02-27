@@ -5,7 +5,8 @@ Tests for the custom route decorators (app.py):
   - api_key_required – validates X-API-Key header against the database
 """
 import secrets
-from unittest.mock import patch
+import subprocess
+from unittest.mock import MagicMock, patch
 
 import pytest
 from user_roles import UserRole
@@ -83,8 +84,6 @@ class TestApiKeyRequired:
             "role": UserRole.REGULAR.value,
             "is_active": True,
         }
-        import subprocess
-        from unittest.mock import MagicMock
         mock_proc = MagicMock()
         mock_proc.stdout = "Door Closed\n"
         mock_proc.stderr = ""
@@ -102,7 +101,6 @@ class TestApiKeyRequired:
             "role": UserRole.REGULAR.value,
             "is_active": True,
         }
-        from unittest.mock import MagicMock
         mock_proc = MagicMock()
         mock_proc.stdout = "Door Opened\n"
         mock_proc.stderr = ""

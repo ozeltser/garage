@@ -9,6 +9,7 @@ import hashlib
 import secrets
 from unittest.mock import MagicMock, patch
 
+import pymysql
 import pytest
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -226,8 +227,6 @@ class TestCreateUser:
         assert stored_role == UserRole.ADMIN.value
 
     def test_duplicate_username_returns_false(self):
-        import pymysql
-
         db = _make_db()
         conn = MagicMock()
         conn.__enter__ = MagicMock(return_value=conn)
