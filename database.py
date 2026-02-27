@@ -68,11 +68,11 @@ class DatabaseManager:
             raise
     
     def _ensure_database_setup(self):
-        """Ensure the users table exists and create initial admin user if needed."""
+        """Ensure the users table exists with the latest schema and create initial admin user if needed."""
         try:
             with self.get_connection() as connection:
                 with connection.cursor() as cursor:
-                    # Create users table if it doesn't exist
+                    # Create users table if it doesn't exist (full current schema for fresh installs)
                     cursor.execute(f"""
                         CREATE TABLE IF NOT EXISTS users (
                             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,26 +90,54 @@ class DatabaseManager:
                             api_key_hash VARCHAR(255) UNIQUE
                         )
                     """)
-                    
+
+                    # Bring existing tables up to the latest schema
+                    self._apply_schema_migrations(cursor)
+
                     # Check if admin user exists
-                    cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = %s", ('admin',))
+                    default_username = os.getenv('DEFAULT_USERNAME', 'admin')
+                    cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = %s", (default_username,))
                     result = cursor.fetchone()
-                    
+
                     if result['count'] == 0:
                         # Create initial admin user
-                        default_username = os.getenv('DEFAULT_USERNAME', 'admin')
                         default_password = os.getenv('DEFAULT_PASSWORD', 'admin')
                         password_hash = generate_password_hash(default_password)
-                        
+
                         cursor.execute(
                             "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)",
                             (default_username, password_hash, UserRole.ADMIN.value)
                         )
                         logger.info(f"Initial admin user '{default_username}' created successfully")
-                    
+
         except Exception as e:
             logger.error(f"Failed to setup database: {str(e)}")
             raise
+
+    def _apply_schema_migrations(self, cursor):
+        """Add any columns missing from existing tables to bring them to the latest schema."""
+        # Ordered list of (column_name, ALTER TABLE SQL) matching the current CREATE TABLE definition
+        migrations = [
+            ('role', f"ALTER TABLE users ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT '{UserRole.REGULAR.value}' AFTER password_hash"),
+            ('first_name', "ALTER TABLE users ADD COLUMN first_name VARCHAR(255) AFTER role"),
+            ('last_name', "ALTER TABLE users ADD COLUMN last_name VARCHAR(255) AFTER first_name"),
+            ('email', "ALTER TABLE users ADD COLUMN email VARCHAR(255) AFTER last_name"),
+            ('phone', "ALTER TABLE users ADD COLUMN phone VARCHAR(50) AFTER email"),
+            ('sms_notifications_enabled', "ALTER TABLE users ADD COLUMN sms_notifications_enabled BOOLEAN DEFAULT FALSE AFTER phone"),
+            ('created_at', "ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ('updated_at', "ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
+            ('is_active', "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE"),
+            ('api_key_hash', "ALTER TABLE users ADD COLUMN api_key_hash VARCHAR(255) UNIQUE"),
+        ]
+
+        for column_name, alter_sql in migrations:
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = %s
+            """, (column_name,))
+            if cursor.fetchone()['count'] == 0:
+                cursor.execute(alter_sql)
+                logger.info(f"Schema migration applied: added column '{column_name}' to users table")
 
     def get_user_by_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
         """Retrieve user by API key from the database."""
