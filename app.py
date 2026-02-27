@@ -208,14 +208,7 @@ def generate_api_key():
 @login_required
 def run_script():
     try:
-        # Run the sample Python script using an absolute, whitelisted path
-        if os.name == 'nt':
-            # We don't have needed hardware access on Windows, so just return a dummy response
-            return jsonify({
-                'success': True,
-                'output': 'Script executed successfully (dummy response on Windows)',
-                'error': None
-            })
+        # Run the sample Python script using an absolute, whitelisted path    
         script_dir = os.path.dirname(os.path.abspath(__file__))
         script_path = os.path.join(script_dir, 'relay.py')
         result = subprocess.run(['python', script_path],
