@@ -36,7 +36,7 @@ def main():
         print("✓ Users table created/verified")
         
         # Check if admin user already exists
-        admin_username = os.getenv('DEFAULT_USERNAME', 'admin')
+        admin_username = os.getenv('ADMIN_USERNAME', 'admin')
         existing_user = db_manager.get_user_by_username(admin_username)
         
         if existing_user:
