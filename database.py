@@ -177,13 +177,13 @@ class DatabaseManager:
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         """Retrieve user by username from the database."""
         try:
-            with self.get_connection() as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active, api_key_hash FROM users WHERE username = %s AND is_active = TRUE",
-                        (username,)
-                    )
-                    return cursor.fetchone()
+                with self.get_connection() as connection:
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "SELECT id, username, password_hash, role, first_name, last_name, email, phone, sms_notifications_enabled, is_active, api_key_hash FROM users WHERE username = %s AND is_active = TRUE",
+                            (username,)
+                        )
+                        return cursor.fetchone()
         except Exception as e:
             logger.error(f"Failed to retrieve user {username}: {str(e)}")
             return None
