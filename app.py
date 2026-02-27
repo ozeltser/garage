@@ -208,7 +208,7 @@ def generate_api_key():
 @login_required
 def run_script():
     try:
-        # Run the sample Python script using an absolute, whitelisted path
+        # Run the sample Python script using an absolute, whitelisted path    
         script_dir = os.path.dirname(os.path.abspath(__file__))
         script_path = os.path.join(script_dir, 'relay.py')
         result = subprocess.run(['python', script_path],

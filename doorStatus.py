@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import sys
+import os
+if os.name == 'nt':
+    print('Automation HAT is not supported on Windows.', file=sys.stderr)
+    sys.exit(0)
+    
 import automationhat
 
 # First, check if the Automation HAT is connected to the Raspberry Pi.

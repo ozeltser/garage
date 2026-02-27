@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 import time
+import os
+
+if os.name == 'nt':
+    print("This script only works on a Raspberry Pi with Automation HAT attached.")
+    exit(0)
+
 import automationhat
 
 if automationhat.is_automation_hat():

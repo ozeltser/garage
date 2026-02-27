@@ -95,13 +95,13 @@ class DatabaseManager:
                     self._apply_schema_migrations(cursor)
 
                     # Check if admin user exists
-                    default_username = os.getenv('DEFAULT_USERNAME', 'admin')
+                    default_username = os.getenv('ADMIN_USERNAME', 'admin')
                     cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = %s", (default_username,))
                     result = cursor.fetchone()
 
                     if result['count'] == 0:
                         # Create initial admin user
-                        default_password = os.getenv('DEFAULT_PASSWORD', 'admin')
+                        default_password = os.getenv('ADMIN_PASSWORD', 'admin')
                         password_hash = generate_password_hash(default_password)
 
                         cursor.execute(
