@@ -1,0 +1,49 @@
+name: Run Tests
+
+# Run the test suite on every push to main and on every pull request
+# targeting main.  This ensures all new code is validated before merge.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        # Installs runtime deps (automationhat is skipped on x86_64 due to the
+        # platform marker in pyproject.toml) plus the 'dev' group (pytest etc.)
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short --no-header
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: .pytest_cache/
+          retention-days: 7
