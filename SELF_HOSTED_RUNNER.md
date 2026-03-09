@@ -72,11 +72,18 @@ uv --version
 # Should print the uv version, e.g., uv 0.5.x
 ```
 
-> **Note:** If `uv` was installed to `~/.local/bin`, make sure that directory is in your `PATH`. You can add it system-wide by creating `/etc/profile.d/uv.sh`:
+> **Note:** If `uv` was installed to `~/.local/bin`, copy it to a system-wide location so all users (including `garage`) can access it:
+>
+> ```bash
+> sudo cp ~/.local/bin/uv /usr/local/bin/uv
+> sudo cp ~/.local/bin/uvx /usr/local/bin/uvx 2>/dev/null || true
+> ```
+>
+> Alternatively, add it to PATH via a profile script (requires logging out and back in for the change to take effect):
 >
 > ```bash
 > echo 'export PATH="$HOME/.local/bin:$PATH"' | sudo tee /etc/profile.d/uv.sh
-> source /etc/profile.d/uv.sh
+> # You must log out and log back in (or open a new shell) for this to take effect
 > ```
 
 ### Install Required Tools
@@ -388,16 +395,14 @@ Paste the following content exactly:
 # Allow the garage user to manage the garage.service without a password.
 # This is required by the automated deploy script (deploy.sh).
 garage ALL=(root) NOPASSWD: /bin/systemctl restart garage.service
-garage ALL=(root) NOPASSWD: /bin/systemctl stop garage.service
-garage ALL=(root) NOPASSWD: /bin/systemctl start garage.service
-garage ALL=(root) NOPASSWD: /bin/systemctl daemon-reload
+garage ALL=(root) NOPASSWD: /bin/systemctl status garage.service
 ```
 
 Save and exit (`Ctrl+X`, then `Y`, then `Enter` in nano).
 
 ### Why This Is Safe
 
-- The sudoers rules are scoped to **only** the four systemctl commands listed above
+- The sudoers rules are scoped to **only** the two systemctl commands listed above (restart and status)
 - The `garage` user cannot run arbitrary commands as root
 - The `NOPASSWD` flag is required because the GitHub Actions runner runs non-interactively (there is no terminal to type a password)
 
@@ -407,9 +412,12 @@ Save and exit (`Ctrl+X`, then `Y`, then `Enter` in nano).
 # Switch to the garage user
 sudo su - garage -s /bin/bash
 
-# Test that the command works without a password prompt
+# Test that both allowed commands work without a password prompt
 sudo -n systemctl status garage.service
 # Should show the service status without asking for a password
+
+sudo -n systemctl restart garage.service
+# Should restart the service without asking for a password
 
 # Verify arbitrary commands are still denied
 sudo -n ls /root

@@ -52,7 +52,7 @@ pre_deploy() {
     db_name=$(read_env DB_NAME)
 
     log "Backing up database $db_name -> $DB_BACKUP_FILE"
-    mysqldump -u "$db_user" -p"$db_pass" "$db_name" > "$DB_BACKUP_FILE"
+    MYSQL_PWD="$db_pass" mysqldump -u "$db_user" "$db_name" > "$DB_BACKUP_FILE"
     log "Database backup complete ($(du -h "$DB_BACKUP_FILE" | cut -f1))"
 }
 
@@ -82,11 +82,10 @@ deploy() {
 
     # Run all migration scripts (each is idempotent)
     log "Running database migrations..."
-    for migration in migrate_db.py migrate_rbac.py migrate_api_key.py migrate_sms_notifications.py; do
-        if [ -f "$APP_DIR/$migration" ]; then
-            log "  Running $migration"
-            uv run python "$migration"
-        fi
+    for migration in "$APP_DIR"/migrate_*.py; do
+        [ -f "$migration" ] || continue
+        log "  Running $(basename "$migration")"
+        uv run python "$migration"
     done
     log "Migrations complete"
 }
@@ -138,7 +137,7 @@ rollback() {
         db_name=$(read_env DB_NAME)
 
         log "Restoring database from $DB_BACKUP_FILE"
-        mysql -u "$db_user" -p"$db_pass" "$db_name" < "$DB_BACKUP_FILE"
+        MYSQL_PWD="$db_pass" mysql -u "$db_user" "$db_name" < "$DB_BACKUP_FILE"
     fi
 
     # Restart service with previous version

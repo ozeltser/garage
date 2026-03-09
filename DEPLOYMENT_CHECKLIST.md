@@ -248,7 +248,7 @@ Use this checklist to ensure a successful production deployment of the Garage We
 - [ ] Direct pushes to `main` blocked
 
 ### Sudoers and Permissions
-- [ ] `/etc/sudoers.d/garage-deploy` created with systemctl NOPASSWD rules
+- [ ] `/etc/sudoers.d/garage-deploy` created with NOPASSWD rules for `restart` and `status`
 - [ ] Verified: `sudo su - garage -s /bin/bash -c "sudo -n systemctl status garage.service"` works without password
 
 ### Bootstrap Deploy

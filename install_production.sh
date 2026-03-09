@@ -129,8 +129,9 @@ chown -R garage:garage /opt/garage/app
 # Install uv and sync dependencies
 print_info "Installing uv and syncing dependencies..."
 if ! command -v uv &>/dev/null; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
+    curl -LsSf https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh
+    cp "$HOME/.local/bin/uv" /usr/local/bin/uv
+    cp "$HOME/.local/bin/uvx" /usr/local/bin/uvx 2>/dev/null || true
 fi
 su - garage -c "cd /opt/garage/app && uv sync --frozen"
 
@@ -198,7 +199,7 @@ chown garage:garage /opt/garage/app/.env
 
 # Initialize database
 print_info "Initializing database..."
-su - garage -c "cd /opt/garage/app && source venv/bin/activate && python init_db.py"
+su - garage -c "cd /opt/garage/app && uv run python init_db.py"
 
 # Setup systemd service
 print_info "Setting up systemd service..."
