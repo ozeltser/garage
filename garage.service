@@ -8,8 +8,8 @@ Type=simple
 User=garage
 Group=garage
 WorkingDirectory=/opt/garage/app
-Environment="PATH=/opt/garage/app/venv/bin"
-ExecStart=/opt/garage/app/venv/bin/python /opt/garage/app/app.py
+Environment="PATH=/opt/garage/app/.venv/bin"
+ExecStart=/opt/garage/app/.venv/bin/python /opt/garage/app/app.py
 Restart=always
 RestartSec=10
 StandardOutput=journal

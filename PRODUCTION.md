@@ -16,7 +16,8 @@ This guide provides detailed instructions for deploying the Garage Web App on a 
 10. [Backup and Restore](#backup-and-restore)
 11. [Monitoring and Maintenance](#monitoring-and-maintenance)
 12. [Troubleshooting](#troubleshooting)
-13. [Updates and Upgrades](#updates-and-upgrades)
+13. [Continuous Deployment (CD Pipeline)](#continuous-deployment-cd-pipeline)
+14. [Updates and Upgrades](#updates-and-upgrades)
 
 ---
 
@@ -173,17 +174,18 @@ cd app
 # sudo chown -R garage:garage /opt/garage/app
 ```
 
-### 4. Create Python Virtual Environment
+### 4. Install Dependencies with uv
 
 ```bash
-# As garage user
-cd /opt/garage/app
-python3 -m venv venv
-source venv/bin/activate
+# Install uv if not already present
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install Python dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+# As garage user
+sudo su - garage -s /bin/bash
+cd /opt/garage/app
+
+# Sync dependencies (creates .venv/ automatically)
+uv sync --frozen
 
 # Exit back to your regular user
 exit
@@ -310,9 +312,7 @@ python3 -c 'import secrets; print(secrets.token_hex(32))'
 ```bash
 # As garage user
 cd /opt/garage/app
-source venv/bin/activate
-python init_db.py
-deactivate
+uv run python init_db.py
 exit
 ```
 
@@ -332,8 +332,7 @@ sudo chmod 755 /opt/garage/app/*.py
 ```bash
 sudo su - garage -s /bin/bash
 cd /opt/garage/app
-source venv/bin/activate
-python app.py
+uv run python app.py
 ```
 
 Open another shell on the same device and check if the app is working: `curl http://<raspberry-pi-ip>:5000`. You should see redirect message to `/login` page.
@@ -368,8 +367,8 @@ Type=simple
 User=garage
 Group=garage
 WorkingDirectory=/opt/garage/app
-Environment="PATH=/opt/garage/app/venv/bin"
-ExecStart=/opt/garage/app/venv/bin/python /opt/garage/app/app.py
+Environment="PATH=/opt/garage/app/.venv/bin"
+ExecStart=/opt/garage/app/.venv/bin/python /opt/garage/app/app.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -989,9 +988,79 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ---
 
+## Continuous Deployment (CD Pipeline)
+
+The project includes a GitHub Actions CD pipeline that automatically deploys to the Raspberry Pi whenever a pull request is merged to `main`. All tests must pass before the deploy job runs.
+
+### How It Works
+
+1. A developer opens a PR against `main`
+2. The CI pipeline runs the full test suite (pytest on Python 3.11 + 3.12)
+3. After review, the PR is merged to `main`
+4. The **Deploy to Raspberry Pi** workflow triggers:
+   - Tests run again on GitHub-hosted runners
+   - If all tests pass, the **deploy** job runs on the self-hosted runner (on the Pi)
+   - The deploy script (`deploy.sh`) backs up the database, pulls code, syncs dependencies, runs migrations, restarts the service, and runs a health check
+   - If the health check fails, it automatically rolls back to the previous version
+
+### Setup
+
+See **[SELF_HOSTED_RUNNER.md](SELF_HOSTED_RUNNER.md)** for the complete setup guide, including:
+- Installing and configuring the GitHub Actions runner on the Pi
+- Enabling branch protection on GitHub
+- Bootstrapping the first deploy
+- Troubleshooting
+
+### Manual Deploy
+
+You can also run the deploy script manually via SSH:
+
+```bash
+sudo su - garage -s /bin/bash
+cd /opt/garage/app
+bash deploy.sh
+```
+
+### Deploy Logs
+
+```bash
+# View the full deploy log
+cat /opt/garage/deploy.log
+
+# Follow the log in real-time during a deploy
+tail -f /opt/garage/deploy.log
+```
+
+### Viewing Deploy History on GitHub
+
+1. Go to your repository on github.com
+2. Click the **Actions** tab
+3. Click **Deploy to Raspberry Pi** in the left sidebar
+4. Each run shows the test and deploy results
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/deploy.yml` | CD workflow definition (test + deploy jobs) |
+| `deploy.sh` | Deploy script with rollback (runs on Pi) |
+| `SELF_HOSTED_RUNNER.md` | Runner setup guide |
+
+---
+
 ## Updates and Upgrades
 
-### 1. Update Application Code
+### 1. Update Application Code (Automated — Recommended)
+
+The preferred way to update the application is through the CD pipeline:
+
+1. Create a branch, make changes, push, and open a PR
+2. Wait for tests to pass
+3. Merge the PR — the deploy happens automatically
+
+See [Continuous Deployment](#continuous-deployment-cd-pipeline) above.
+
+### 2. Update Application Code (Manual)
 
 ```bash
 # Stop service

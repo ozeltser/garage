@@ -231,6 +231,44 @@ Use this checklist to ensure a successful production deployment of the Garage We
 - [ ] VPN access tested
 - [ ] Access via VPN working
 
+## Continuous Deployment (CD Pipeline)
+
+### Self-Hosted Runner Setup
+- [ ] `uv` installed system-wide on the Pi
+- [ ] GitHub Actions runner downloaded and extracted at `/opt/github-runner`
+- [ ] Runner configured with labels `self-hosted,raspberry-pi`
+- [ ] Runner registered and showing "Idle" on GitHub (**Settings** → **Actions** → **Runners**)
+- [ ] Runner installed as systemd service: `sudo ./svc.sh install garage`
+- [ ] Runner service running: `systemctl status actions.runner.*.service`
+
+### Branch Protection
+- [ ] Branch protection enabled on `main` branch
+- [ ] Require pull request before merging enabled
+- [ ] Require status checks (`pytest (3.11)`, `pytest (3.12)`) to pass before merging
+- [ ] Direct pushes to `main` blocked
+
+### Sudoers and Permissions
+- [ ] `/etc/sudoers.d/garage-deploy` created with NOPASSWD rules for `restart` and `status`
+- [ ] Verified: `sudo su - garage -s /bin/bash -c "sudo -n systemctl status garage.service"` works without password
+
+### Bootstrap Deploy
+- [ ] Latest code pulled to `/opt/garage/app` with `git reset --hard origin/main`
+- [ ] Dependencies synced with `uv sync --frozen` (`.venv/` created)
+- [ ] Updated `garage.service` copied to `/etc/systemd/system/`
+- [ ] `systemctl daemon-reload && systemctl restart garage.service` successful
+- [ ] `deploy.sh` tested manually: `cd /opt/garage/app && bash deploy.sh`
+
+### Pipeline Verification
+- [ ] Test PR created, merged to main, and auto-deploy triggered
+- [ ] Deploy log shows `DEPLOY SUCCEEDED`: `cat /opt/garage/deploy.log`
+- [ ] Rollback tested (optional but recommended)
+- [ ] Deploy log rotation configured (optional)
+
+### Reference
+- [ ] `SELF_HOSTED_RUNNER.md` reviewed for detailed setup instructions
+
+---
+
 ## Final Verification
 
 ### Health Check
