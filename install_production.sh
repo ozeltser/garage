@@ -107,7 +107,7 @@ fi
 print_info "Setting up application directory..."
 if [ ! -d "/opt/garage/app" ]; then
     # Check if we're running from the repo
-    if [ -f "./app.py" ] && [ -f "./requirements.txt" ]; then
+    if [ -f "./app.py" ]; then
         mkdir -p /opt/garage
         cp -r . /opt/garage/app
         print_info "Copied application files from current directory"
@@ -126,10 +126,13 @@ fi
 cd /opt/garage/app
 chown -R garage:garage /opt/garage/app
 
-# Create Python virtual environment
-print_info "Creating Python virtual environment..."
-su - garage -c "cd /opt/garage/app && python3 -m venv venv"
-su - garage -c "cd /opt/garage/app && source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+# Install uv and sync dependencies
+print_info "Installing uv and syncing dependencies..."
+if ! command -v uv &>/dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+su - garage -c "cd /opt/garage/app && uv sync --frozen"
 
 # Setup MySQL
 print_info "Configuring MySQL/MariaDB..."

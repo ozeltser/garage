@@ -1,0 +1,68 @@
+name: Deploy to Raspberry Pi
+
+# Triggered only on pushes to main (which should only happen via merged PRs
+# when branch protection is enabled). The test job runs first and must pass
+# before the deploy job starts.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short --no-header
+
+  deploy:
+    name: Deploy to Production
+    runs-on: [self-hosted, raspberry-pi]
+    needs: test
+    if: success()
+
+    env:
+      APP_DIR: /opt/garage/app
+
+    steps:
+      - name: Validate environment
+        run: |
+          test -d "$APP_DIR" || { echo "::error::APP_DIR $APP_DIR does not exist"; exit 1; }
+          command -v uv >/dev/null || { echo "::error::uv is not installed"; exit 1; }
+          systemctl list-unit-files garage.service >/dev/null || { echo "::error::garage.service not found"; exit 1; }
+
+      - name: Run deploy script
+        working-directory: ${{ env.APP_DIR }}
+        run: bash deploy.sh
+        timeout-minutes: 10
+
+      - name: Report result
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "::notice::Deploy succeeded at $(date)"
+          else
+            echo "::error::Deploy FAILED — check runner logs and /opt/garage/deploy.log"
+          fi
