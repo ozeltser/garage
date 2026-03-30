@@ -26,6 +26,10 @@ This document outlines the security features implemented in the Garage Web App M
 - **Secret key protection**: Flask secret key loaded from environment variables
 - **Input validation**: All user inputs are validated before processing
 - **Error handling**: Comprehensive error handling without information disclosure
+- **CORS protection**: WebSocket connections restricted to trusted origins only
+  - Default configuration allows only localhost connections
+  - Production deployments must explicitly specify allowed origins
+  - Never uses wildcard (*) in production
 
 ### 5. Logging and Monitoring
 - **Security event logging**: Login attempts and database operations are logged
@@ -42,6 +46,22 @@ DB_USER=garage_user
 DB_PASSWORD=secure-database-password
 DB_NAME=garage_app
 ```
+
+### CORS Configuration (Required for Production)
+For production deployments, you must configure allowed WebSocket origins:
+```bash
+# Production example - specify exact domains
+CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Development example - allow specific localhost ports
+CORS_ALLOWED_ORIGINS=http://localhost:5000,http://localhost:3000,http://127.0.0.1:5000
+```
+
+**Security Warning**: 
+- Never use wildcard `*` for CORS_ALLOWED_ORIGINS in production
+- If not set, defaults to localhost only (`http://localhost:5000,http://127.0.0.1:5000`)
+- Always specify exact origins, including protocol (http/https) and port
+- Each origin should match the URL users access your application from
 
 ### Optional SSL Configuration
 For production deployments, SSL/TLS connections to the database are recommended.
@@ -80,6 +100,7 @@ FLUSH PRIVILEGES;
 ### Before Deployment
 - [ ] Generate strong, unique `SECRET_KEY` using: `python3 -c 'import secrets; print(secrets.token_hex(32))'`
 - [ ] Use secure passwords for all accounts (minimum 12 characters)
+- [ ] Configure `CORS_ALLOWED_ORIGINS` with exact production domain(s) - never use wildcard `*`
 - [ ] Change default admin username to something unique (not 'admin')
 - [ ] Configure SSL/TLS for database connections
 - [ ] Set up dedicated database user with minimal privileges
